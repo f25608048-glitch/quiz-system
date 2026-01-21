@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student - Full Exam</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0b0e11; color: white; padding: 20px; }
+        .exam-container { max-width: 700px; margin: auto; background: #1c2128; padding: 30px; border-radius: 15px; }
+        .q-block { background: #2d333b; padding: 15px; margin-bottom: 20px; border-radius: 10px; }
+        #timer { position: fixed; top: 10px; right: 10px; background: red; padding: 10px; border-radius: 5px; font-weight: bold; }
+        .opt-row { margin: 5px 0; display: block; cursor: pointer; }
+        #lockScreen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:red; z-index:1000; text-align:center; padding-top:20%; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+    <div id="lockScreen"><h1>🚨 EXAM BLOCKED</h1><p>Cheating detected (Tab switched).</p></div>
+    
+    <div class="exam-container">
+        <h2 id="status">Waiting for Teacher to start...</h2>
+        <input type="text" id="sName" placeholder="Enter Full Name" style="padding:10px; width:100%; border-radius:5px; margin-bottom:20px;">
+        <div id="timer">00:00</div>
+        <div id="paperArea"></div>
+        <button id="subBtn" onclick="finishExam()" style="display:none; width:100%; padding:15px; background:#2ed573; border:none; color:white; font-weight:bold; cursor:pointer;">SUBMIT ENTIRE PAPER</button>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB0VvfW63xx10C4_l9obcQMC64cDFGndZ8",
+        authDomain: "smart-quiz-system-d59d9.firebaseapp.com",
+        databaseURL: "https://smart-quiz-system-d59d9-default-rtdb.firebaseio.com",
+        projectId: "smart-quiz-system-d59d9",
+        storageBucket: "smart-quiz-system-d59d9.firebasestorage.app",
+        messagingSenderId: "38603211706",
+        appId: "1:38603211706:web:57b1e7a3d48426544ad383"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    let currentPaper = [], timerInt, cheated = false;
+
+    window.onblur = () => { if(currentPaper.length > 0) { cheated = true; document.getElementById('lockScreen').style.display='block'; finishExam(); } };
+
+    onValue(ref(db, 'activeExam'), (snap) => {
+        const data = snap.val();
+        if(!data || data.status !== "live") return;
+        currentPaper = data.questions;
+        renderPaper(data.questions);
+        startTimer(data.endTime);
+        document.getElementById('status').innerText = "Exam in Progress...";
+        document.getElementById('subBtn').style.display = "block";
+    });
+
+    function renderPaper(qs) {
+        const area = document.getElementById('paperArea');
+        area.innerHTML = "";
+        qs.forEach((q, i) => {
+            let html = `<div class="q-block"><strong>Q${i+1}: ${q.text}</strong><br>`;
+            if(q.type === 'mcq') {
+                ['A','B','C','D'].forEach(opt => {
+                    html += `<label class="opt-row"><input type="radio" name="q${i}" value="${opt}"> ${q.options[opt]}</label>`;
+                });
+            } else {
+                html += `<textarea id="ans${i}" style="width:100%; margin-top:10px;"></textarea>`;
+            }
+            area.innerHTML += html + `</div>`;
+        });
+    }
+
+    function startTimer(end) {
+        timerInt = setInterval(() => {
+            let left = Math.floor((end - Date.now()) / 1000);
+            if(left <= 0) { clearInterval(timerInt); finishExam(); }
+            document.getElementById('timer').innerText = left + "s Remaining";
+        }, 1000);
+    }
+
+    window.finishExam = () => {
+        clearInterval(timerInt);
+        const name = document.getElementById('sName').value || "Anonymous";
+        let correct = 0, totalMCQ = 0;
+        
+        currentPaper.forEach((q, i) => {
+            if(q.type === 'mcq') {
+                totalMCQ++;
+                const selected = document.querySelector(`input[name="q${i}"]:checked`)?.value;
+                if(selected === q.correct) correct++;
+            }
+        });
+
+        const score = totalMCQ > 0 ? Math.round((correct/totalMCQ)*100) : 100;
+        set(ref(db, 'submissions/' + name.replace(/\s/g, '')), { name, score, cheated });
+        
+        document.getElementById('paperArea').innerHTML = "<h2>Exam Submitted! Result sent to teacher.</h2>";
+        document.getElementById('subBtn').style.display = "none";
+    };
+</script>
+</body>
+</html>
