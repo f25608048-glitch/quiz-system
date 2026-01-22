@@ -3,31 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Quiz System - Home</title>
+    <title>Smart Quiz - Home</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .portal-card { background: #1e293b; padding: 50px; border-radius: 20px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); width: 380px; border: 1px solid #334155; }
-        h1 { font-size: 2.5rem; margin-bottom: 10px; background: linear-gradient(to right, #3b82f6, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .main-card { background: #1e293b; padding: 45px; border-radius: 20px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); width: 380px; border: 1px solid #334155; }
+        h1 { font-size: 2.2rem; margin-bottom: 10px; color: #f1f5f9; }
         p { color: #94a3b8; margin-bottom: 30px; }
-        .btn { display: block; padding: 18px; margin: 15px 0; border-radius: 12px; text-decoration: none; color: white; font-weight: bold; font-size: 1.1rem; transition: 0.3s; text-align: center; }
-        .t-btn { background: #3b82f6; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
-        .s-btn { background: #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+        .btn-box { display: flex; flex-direction: column; gap: 15px; }
+        .btn { padding: 16px; border-radius: 12px; border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; color: white; text-decoration: none; text-align: center; }
+        .teacher-btn { background: #3b82f6; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
+        .student-btn { background: #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
         .btn:hover { transform: translateY(-5px); filter: brightness(1.1); }
-        .footer { position: absolute; bottom: 20px; font-size: 0.8rem; color: #475569; }
     </style>
 </head>
 <body>
-    <div class="portal-card">
-        <h1>Smart Quiz</h1>
-        <p>AI-Powered Examination Portal</p>
-        
-        <a href="teacher.html" class="btn t-btn">👨‍🏫 Teacher Login / Sign Up</a>
-        <a href="student.html" class="btn s-btn">👨‍🎓 Student Examination</a>
-        
-        <div style="margin-top: 20px; font-size: 0.8rem; color: #64748b;">
-            Secure Authentication Enabled 🔒
-        </div>
+
+<div class="main-card">
+    <h1>Smart Quiz Portal</h1>
+    <p>AI-Powered Secure Examination</p>
+    
+    <div class="btn-box">
+        <a href="teacher.html" class="btn teacher-btn">👨‍🏫 Teacher Portal</a>
+        <a href="student.html" class="btn student-btn">👨‍🎓 Student Portal</a>
     </div>
-    <div class="footer">Powered by Firebase & GitHub Actions</div>
+</div>
+
 </body>
 </html>
