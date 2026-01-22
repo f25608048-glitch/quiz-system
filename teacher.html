@@ -1,49 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Teacher Portal - Auth System</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .auth-card { background: #1e293b; padding: 40px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .container { max-width: 1200px; margin: auto; display: none; gap: 20px; width: 95%; height: auto; align-items: flex-start; }
-        .box { background: #1e293b; padding: 25px; border-radius: 12px; flex: 1; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; box-sizing: border-box; }
-        button { background: #3b82f6; color: white; border: none; padding: 14px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
-        .toggle-link { color: #3b82f6; cursor: pointer; text-decoration: underline; font-size: 0.9rem; margin-top: 15px; display: block; }
-        #emailField { display: block; } /* Default Sign Up */
-        .error { color: #ef4444; font-size: 0.8rem; margin-top: 5px; }
-    </style>
-</head>
-<body>
-
-<div id="authScreen" class="auth-card">
-    <h2 id="authTitle">Create Teacher Account</h2>
-    <div id="emailField">
-        <input type="email" id="tEmail" placeholder="Gmail Address">
-    </div>
-    <input type="text" id="tUser" placeholder="Username (Unique)">
-    <input type="password" id="tPass" placeholder="Password">
-    <button onclick="handleAuth()" id="authBtn">Sign Up</button>
-    <p id="errorMsg" class="error"></p>
-    
-    <span class="toggle-link" id="toggleLink" onclick="toggleAuth()">Already have an account? Login</span>
-</div>
-
-<div class="container" id="dashboard">
-    <div class="box">
-        <h2 id="welcomeMsg">Welcome</h2>
-        <p>Set up your exam and share your Username with students.</p>
-        <textarea id="rollList" style="width:100%; height:50px;" placeholder="Allowed Roll Numbers (101, 102...)"></textarea>
-        <button onclick="publishExam()" style="background:#10b981;">Publish Exam</button>
-    </div>
-    <div class="box">
-        <h3>Student Results</h3>
-        <div id="resList"></div>
-        <button onclick="location.reload()" style="background:#444;">Logout</button>
-    </div>
-</div>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -61,8 +15,8 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     let isLoginMode = false;
+    let currentUser = "";
 
-    // Toggle between Login and Signup UI
     window.toggleAuth = () => {
         isLoginMode = !isLoginMode;
         document.getElementById('authTitle').innerText = isLoginMode ? "Teacher Login" : "Create Teacher Account";
@@ -78,53 +32,67 @@
         const email = document.getElementById('tEmail').value;
         const errorMsg = document.getElementById('errorMsg');
 
-        if(!user || !pass) return alert("Please fill fields");
+        if(!user || !pass) return alert("Please fill all fields");
 
         const userRef = ref(db, 'teachers/' + user);
         const snap = await get(userRef);
 
         if (isLoginMode) {
-            // LOGIN LOGIC
             if (snap.exists() && snap.val().password === pass) {
                 startDashboard(user);
             } else {
-                errorMsg.innerText = "Invalid Username or Password!";
+                errorMsg.innerText = "❌ Invalid Username or Password!";
             }
         } else {
-            // SIGNUP LOGIC
             if (snap.exists()) {
-                errorMsg.innerText = "Username already taken! Try another.";
+                errorMsg.innerText = "❌ Username already taken! Try another.";
             } else {
                 if(!email.includes('@')) return alert("Enter valid Gmail");
                 await set(userRef, { email: email, password: pass });
-                alert("Account Created!");
+                alert("✅ Account Created Successfully!");
                 startDashboard(user);
             }
         }
     };
 
-    function startDashboard(user) {
-        document.body.style.display = "block";
+    async function startDashboard(user) {
+        currentUser = user;
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'flex';
-        document.getElementById('welcomeMsg').innerText = "Teacher: " + user;
+        document.getElementById('welcomeMsg').innerText = "Welcome, " + user;
         
-        // Load Results
+        // Auto-load purana data agar koi hai
+        const examSnap = await get(ref(db, 'exams/' + user));
+        if(examSnap.exists()) {
+            document.getElementById('rollList').value = examSnap.val().allowedList.join(', ');
+        }
+
+        // Real-time Results Load
         onValue(ref(db, 'exams/' + user + '/submissions'), (snap) => {
             const list = document.getElementById('resList');
-            list.innerHTML = snap.exists() ? "" : "No results yet.";
+            list.innerHTML = "";
             if(snap.exists()){
                 Object.values(snap.val()).forEach(s => {
-                    list.innerHTML += `<p>${s.name}: ${s.score}% ${s.cheated?'🚨':'✅'}</p>`;
+                    list.innerHTML += `<div style="background:#0f172a; padding:10px; margin:5px 0; border-radius:5px; border-left:4px solid #3b82f6;">
+                        <b>${s.name}</b>: ${s.score}% ${s.cheated ? '🚨 (Cheated)' : '✅ (Clear)'}
+                    </div>`;
                 });
+            } else {
+                list.innerHTML = "<p style='color:#94a3b8;'>No students have submitted yet.</p>";
             }
         });
     }
 
     window.publishExam = () => {
-        // Your existing publish logic
-        alert("Exam Published!");
+        const rolls = document.getElementById('rollList').value.split(',').map(r => r.trim());
+        if(!rolls[0]) return alert("Please enter allowed Roll Numbers!");
+
+        // Yahan aap apne questions ki array bhi dal sakte hain
+        set(ref(db, 'exams/' + currentUser), {
+            allowedList: rolls,
+            status: "live",
+            lastUpdated: Date.now()
+        });
+        alert("🚀 Exam Published! Students of " + currentUser + " can now login.");
     };
 </script>
-</body>
-</html>
