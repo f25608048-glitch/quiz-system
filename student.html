@@ -2,37 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Student Portal - Multi-Teacher</title>
+    <title>Student Portal - Online Exam</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: white; text-align: center; padding: 50px; }
-        .card { background: #16213e; padding: 30px; border-radius: 15px; display: inline-block; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; box-sizing: border-box; }
-        button { background: #e94560; color: white; border: none; padding: 15px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        #quizArea { display: none; text-align: left; max-width: 600px; margin: auto; }
-        .timer { font-size: 1.5rem; color: #e94560; font-weight: bold; margin-bottom: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .card { background: #1e293b; padding: 35px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: none; box-sizing: border-box; }
+        button { background: #10b981; color: white; border: none; padding: 15px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        #quizArea { display: none; width: 90%; max-width: 800px; background: #1e293b; padding: 30px; border-radius: 15px; }
+        .timer { font-size: 1.5rem; color: #fbbf24; font-weight: bold; margin-bottom: 20px; text-align: right; }
+        .q-block { background: #0f172a; padding: 20px; margin-bottom: 15px; border-radius: 10px; border-left: 5px solid #3b82f6; }
     </style>
 </head>
 <body>
 
 <div id="loginArea" class="card">
-    <h2>📝 Student Access</h2>
-    <input type="text" id="teacherID" placeholder="Enter Teacher's Username">
-    <input type="text" id="studentReg" placeholder="Your Registration Number">
-    <button onclick="attemptEntry()">LOGIN & START</button>
+    <h2>👨‍🎓 Student Entry</h2>
+    <input type="email" id="sEmail" placeholder="Your Gmail Address">
+    <input type="password" id="sPass" placeholder="Password (6+ chars)">
+    <input type="text" id="teacherID" placeholder="Teacher's Username">
+    <input type="text" id="studentReg" placeholder="Registration Number / Roll No">
+    <button onclick="attemptEntry()">LOGIN & START EXAM</button>
 </div>
 
 <div id="quizArea">
-    <div class="timer" id="timer">--:--</div>
+    <div class="timer" id="timerDisplay">Time Left: 10:00</div>
     <div id="questionContent"></div>
-    <button onclick="submitExam()" id="submitBtn" style="margin-top:20px; background:#2ed573;">SUBMIT TEST</button>
+    <button onclick="submitExam()" style="background:#3b82f6;">SUBMIT FINAL TEST ✅</button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
-        apiKey: "AIzaSyB0VvfW63xx10C4_l9obcQMC64cDFGndZ8",
+        apiKey: "AIzaSyBOVvfW63xx10C4_l9obcQMC64cDFGndZ8",
         authDomain: "smart-quiz-system-d59d9.firebaseapp.com",
         databaseURL: "https://smart-quiz-system-d59d9-default-rtdb.firebaseio.com",
         projectId: "smart-quiz-system-d59d9",
@@ -42,67 +46,87 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getDatabase(app);
+
     let examData = null;
     let currentTeacher = "";
     let cheated = false;
+    let timeLeft = 600; // 10 minutes default
 
     window.attemptEntry = async () => {
+        const email = document.getElementById('sEmail').value;
+        const pass = document.getElementById('sPass').value;
         const tID = document.getElementById('teacherID').value.trim().toLowerCase();
         const reg = document.getElementById('studentReg').value.trim();
-        
-        const snapshot = await get(ref(db, 'exams/' + tID));
-        if (!snapshot.exists()) return alert("Teacher ID not found or no exam live!");
-        
-        examData = snapshot.val();
-        currentTeacher = tID;
 
-        if(examData.allowedList.includes(reg)) {
+        if(!email || !pass || !tID || !reg) return alert("Please fill all fields!");
+
+        try {
+            // 1. Check if Teacher exists
+            const snapshot = await get(ref(db, 'exams/' + tID));
+            if (!snapshot.exists()) return alert("Teacher ID not found or no exam live!");
+            
+            examData = snapshot.val();
+            currentTeacher = tID;
+
+            // 2. Simple Authorization Check
+            const isAllowed = examData.allowedList.some(r => r.trim() === reg);
+            if(!isAllowed) return alert("Your Roll Number is not in the allowed list!");
+
+            // 3. Gmail Auth
+            await createUserWithEmailAndPassword(auth, email, pass).catch(() => {
+                return signInWithEmailAndPassword(auth, email, pass);
+            });
+
+            // 4. Start Exam
             document.getElementById('loginArea').style.display = 'none';
             document.getElementById('quizArea').style.display = 'block';
             loadQuestions();
             startTimer();
-        } else {
-            alert("Registration Number not authorized!");
-        }
+        } catch (e) { alert(e.message); }
     };
 
     function loadQuestions() {
         const container = document.getElementById('questionContent');
+        container.innerHTML = "";
         examData.questions.forEach((q, i) => {
-            let html = `<div style="margin-bottom:20px;"><h3>Q${i+1}: ${q.text}</h3>`;
-            if(q.type === 'mcq') {
-                for(let opt in q.options) { html += `<label><input type="radio" name="q${i}" value="${opt}"> ${q.options[opt]}</label><br>`; }
-            } else { html += `<textarea id="ans${i}" style="width:100%; height:60px;"></textarea>`; }
-            container.innerHTML += html + `</div>`;
+            container.innerHTML += `
+                <div class="q-block">
+                    <h3>Q${i+1}: ${q.text}</h3>
+                    <textarea id="ans${i}" placeholder="Type your answer here..." style="width:100%; height:80px; padding:10px; border-radius:5px; border:none;"></textarea>
+                </div>`;
         });
     }
 
     function startTimer() {
-        setInterval(() => {
-            const timeLeft = Math.floor((examData.endTime - Date.now()) / 1000);
-            if(timeLeft <= 0) { alert("Time Up!"); submitExam(); }
-            document.getElementById('timer').innerText = `Time: ${Math.floor(timeLeft/60)}:${timeLeft%60}`;
+        const timerObj = setInterval(() => {
+            timeLeft--;
+            let mins = Math.floor(timeLeft / 60);
+            let secs = timeLeft % 60;
+            document.getElementById('timerDisplay').innerText = `Time Left: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            if(timeLeft <= 0) {
+                clearInterval(timerObj);
+                alert("Time is up! Submitting automatically.");
+                submitExam();
+            }
         }, 1000);
     }
 
     window.onblur = () => { cheated = true; };
 
-    window.submitExam = () => {
-        let score = 0;
-        examData.questions.forEach((q, i) => {
-            if(q.type === 'mcq') {
-                const sel = document.querySelector(`input[name="q${i}"]:checked`)?.value;
-                if(sel === q.correct) score++;
-            } else { score++; }
+    window.submitExam = async () => {
+        const reg = document.getElementById('studentReg').value;
+        const submissionsRef = ref(db, `exams/${currentTeacher}/submissions/${reg}`);
+        
+        await set(submissionsRef, {
+            name: reg,
+            score: 100, // For subjective, teacher will review later
+            cheated: cheated,
+            submittedAt: new Date().toLocaleTimeString()
         });
-        const finalScore = Math.round((score / examData.questions.length) * 100);
-        set(ref(db, `exams/${currentTeacher}/submissions/${document.getElementById('studentReg').value}`), {
-            name: document.getElementById('studentReg').value,
-            score: finalScore,
-            cheated: cheated
-        });
-        alert("Submitted!");
+
+        alert("Test Submitted Successfully! Thank you.");
         location.reload();
     };
 </script>
