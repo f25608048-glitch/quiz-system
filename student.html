@@ -8,9 +8,11 @@
         .card { background: #1e293b; padding: 35px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: none; box-sizing: border-box; }
         button { background: #10b981; color: white; border: none; padding: 15px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        #quizArea { display: none; width: 90%; max-width: 800px; background: #1e293b; padding: 30px; border-radius: 15px; }
+        #quizArea { display: none; width: 90%; max-width: 800px; background: #1e293b; padding: 30px; border-radius: 15px; margin: 20px; }
         .timer { font-size: 1.5rem; color: #fbbf24; font-weight: bold; margin-bottom: 20px; text-align: right; }
         .q-block { background: #0f172a; padding: 20px; margin-bottom: 15px; border-radius: 10px; border-left: 5px solid #3b82f6; }
+        .opt-label { display: block; background: #1e293b; padding: 10px; margin: 5px 0; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        .opt-label:hover { background: #334155; }
     </style>
 </head>
 <body>
@@ -20,8 +22,8 @@
     <input type="email" id="sEmail" placeholder="Your Gmail Address">
     <input type="password" id="sPass" placeholder="Password (6+ chars)">
     <input type="text" id="teacherID" placeholder="Teacher's Username">
-    <input type="text" id="studentReg" placeholder="Registration Number / Roll No">
-    <button onclick="attemptEntry()">LOGIN & START EXAM</button>
+    <input type="text" id="studentReg" placeholder="Roll Number">
+    <button onclick="attemptEntry()">START EXAM</button>
 </div>
 
 <div id="quizArea">
@@ -52,7 +54,7 @@
     let examData = null;
     let currentTeacher = "";
     let cheated = false;
-    let timeLeft = 600; // 10 minutes default
+    let timeLeft = 600;
 
     window.attemptEntry = async () => {
         const email = document.getElementById('sEmail').value;
@@ -60,26 +62,21 @@
         const tID = document.getElementById('teacherID').value.trim().toLowerCase();
         const reg = document.getElementById('studentReg').value.trim();
 
-        if(!email || !pass || !tID || !reg) return alert("Please fill all fields!");
+        if(!email || !pass || !tID || !reg) return alert("All fields required!");
 
         try {
-            // 1. Check if Teacher exists
             const snapshot = await get(ref(db, 'exams/' + tID));
-            if (!snapshot.exists()) return alert("Teacher ID not found or no exam live!");
+            if (!snapshot.exists()) return alert("No live exam found for this Teacher ID!");
             
             examData = snapshot.val();
             currentTeacher = tID;
 
-            // 2. Simple Authorization Check
-            const isAllowed = examData.allowedList.some(r => r.trim() === reg);
-            if(!isAllowed) return alert("Your Roll Number is not in the allowed list!");
+            if(!examData.allowedList.includes(reg)) return alert("Roll Number not authorized!");
 
-            // 3. Gmail Auth
-            await createUserWithEmailAndPassword(auth, email, pass).catch(() => {
-                return signInWithEmailAndPassword(auth, email, pass);
+            await signInWithEmailAndPassword(auth, email, pass).catch(() => {
+                return createUserWithEmailAndPassword(auth, email, pass);
             });
 
-            // 4. Start Exam
             document.getElementById('loginArea').style.display = 'none';
             document.getElementById('quizArea').style.display = 'block';
             loadQuestions();
@@ -91,11 +88,22 @@
         const container = document.getElementById('questionContent');
         container.innerHTML = "";
         examData.questions.forEach((q, i) => {
-            container.innerHTML += `
-                <div class="q-block">
-                    <h3>Q${i+1}: ${q.text}</h3>
-                    <textarea id="ans${i}" placeholder="Type your answer here..." style="width:100%; height:80px; padding:10px; border-radius:5px; border:none;"></textarea>
-                </div>`;
+            let html = `<div class="q-block"><h3>Q${i+1}: ${q.text}</h3>`;
+            
+            if(q.type === 'mcq') {
+                // MCQ Logic: Display Options
+                for(let key in q.options) {
+                    html += `
+                        <label class="opt-label">
+                            <input type="radio" name="q${i}" value="${key}"> ${key}: ${q.options[key]}
+                        </label>`;
+                }
+            } else {
+                // Subjective Logic: Display Textarea
+                html += `<textarea id="ans${i}" placeholder="Write answer..." style="width:100%; height:80px;"></textarea>`;
+            }
+            
+            container.innerHTML += html + `</div>`;
         });
     }
 
@@ -105,11 +113,7 @@
             let mins = Math.floor(timeLeft / 60);
             let secs = timeLeft % 60;
             document.getElementById('timerDisplay').innerText = `Time Left: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            if(timeLeft <= 0) {
-                clearInterval(timerObj);
-                alert("Time is up! Submitting automatically.");
-                submitExam();
-            }
+            if(timeLeft <= 0) { clearInterval(timerObj); submitExam(); }
         }, 1000);
     }
 
@@ -117,16 +121,27 @@
 
     window.submitExam = async () => {
         const reg = document.getElementById('studentReg').value;
-        const submissionsRef = ref(db, `exams/${currentTeacher}/submissions/${reg}`);
-        
-        await set(submissionsRef, {
-            name: reg,
-            score: 100, // For subjective, teacher will review later
-            cheated: cheated,
-            submittedAt: new Date().toLocaleTimeString()
+        let score = 0;
+
+        examData.questions.forEach((q, i) => {
+            if(q.type === 'mcq') {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`)?.value;
+                if(selected === q.correct) score++;
+            } else {
+                score++; // Subjective needs manual review, giving default mark for now
+            }
         });
 
-        alert("Test Submitted Successfully! Thank you.");
+        const finalScore = Math.round((score / examData.questions.length) * 100);
+
+        await set(ref(db, `exams/${currentTeacher}/submissions/${reg}`), {
+            name: reg,
+            score: finalScore,
+            cheated: cheated,
+            time: new Date().toLocaleTimeString()
+        });
+
+        alert("Test Submitted!");
         location.reload();
     };
 </script>
