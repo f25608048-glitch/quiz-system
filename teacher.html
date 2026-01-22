@@ -7,47 +7,69 @@
         body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: white; padding: 20px; }
         .container { max-width: 1100px; margin: auto; display: flex; gap: 20px; }
         .box { background: #16213e; padding: 20px; border-radius: 15px; flex: 1; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        input, select { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: none; box-sizing: border-box; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: none; box-sizing: border-box; color: #000; }
         button { background: #e94560; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
         .q-list-item { background: #0f3460; padding: 10px; margin: 5px 0; border-radius: 5px; font-size: 0.9rem; border-left: 4px solid #2ed573; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #444; padding: 8px; text-align: center; }
+        /* Password Screen Style */
+        #passwordProtector { position:fixed; top:0; left:0; width:100%; height:100%; background:#1a1a2e; z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     </style>
 </head>
 <body>
-    <h2 style="text-align:center;">👨‍🏫 Exam Creator (Bulk Mode)</h2>
-    <div class="container">
-        <div class="box">
-            <h3>1. Design Paper</h3>
-            <select id="qType" onchange="document.getElementById('mcqFields').style.display=(this.value=='mcq'?'block':'none')">
-                <option value="subjective">Subjective (Long Ans)</option>
-                <option value="mcq">MCQ</option>
-            </select>
-            <input type="text" id="qText" placeholder="Enter Question...">
-            <div id="mcqFields" style="display:none; background:#0f3460; padding:10px; border-radius:8px;">
-                <input type="text" id="optA" placeholder="Option A">
-                <input type="text" id="optB" placeholder="Option B">
-                <input type="text" id="optC" placeholder="Option C">
-                <input type="text" id="optD" placeholder="Option D">
-                <select id="correctOpt"><option value="A">Correct: A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
-            </div>
-            <button onclick="addToPaper()" style="background:#533483;">ADD TO PAPER ➕</button>
-            <div id="paperPreview"></div>
-            <hr>
-            <input type="number" id="examTime" placeholder="Exam Duration (Seconds)" value="120">
-            <button onclick="publishExam()" style="background:#2ed573; font-size:1.2rem;">PUBLISH FULL EXAM 🚀</button>
-        </div>
 
-        <div class="box">
-            <h3>2. Results & Performance</h3>
-            <div id="stats">Average: 0%</div>
-            <table>
-                <thead><tr><th>Student</th><th>Score</th><th>Status</th></tr></thead>
-                <tbody id="resBody"></tbody>
-            </table>
-            <button onclick="resetExam()" style="background:#444;">RESET EVERYTHING</button>
+<div id="passwordProtector">
+    <h2 style="color:white;">🔐 Admin Access Required</h2>
+    <input type="password" id="adminPass" placeholder="Enter Admin Password" style="width: 250px; text-align: center;">
+    <button onclick="checkAdminPass()" style="width: 250px; background:#e94560;">Login</button>
+    <p id="passError" style="color:red; margin-top:10px;"></p>
+</div>
+
+<script>
+    function checkAdminPass() {
+        const pass = document.getElementById('adminPass').value;
+        const correctPass = "admin123"; // Aapka password
+        if(pass === correctPass) {
+            document.getElementById('passwordProtector').style.display = 'none';
+        } else {
+            document.getElementById('passError').innerText = "Incorrect Password!";
+        }
+    }
+</script>
+
+<h2 style="text-align:center;">👨‍🏫 Exam Creator (Bulk Mode)</h2>
+<div class="container">
+    <div class="box">
+        <h3>1. Design Paper</h3>
+        <select id="qType" onchange="document.getElementById('mcqFields').style.display=(this.value=='mcq'?'block':'none')">
+            <option value="subjective">Subjective (Long Ans)</option>
+            <option value="mcq">MCQ</option>
+        </select>
+        <input type="text" id="qText" placeholder="Enter Question...">
+        <div id="mcqFields" style="display:none; background:#0f3460; padding:10px; border-radius:8px;">
+            <input type="text" id="optA" placeholder="Option A">
+            <input type="text" id="optB" placeholder="Option B">
+            <input type="text" id="optC" placeholder="Option C">
+            <input type="text" id="optD" placeholder="Option D">
+            <select id="correctOpt"><option value="A">Correct: A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
         </div>
+        <button onclick="addToPaper()" style="background:#533483;">ADD TO PAPER ➕</button>
+        <div id="paperPreview"></div>
+        <hr>
+        <input type="number" id="examTime" placeholder="Exam Duration (Seconds)" value="120">
+        <button onclick="publishExam()" style="background:#2ed573; font-size:1.2rem;">PUBLISH FULL EXAM 🚀</button>
     </div>
+
+    <div class="box">
+        <h3>2. Results & Performance</h3>
+        <div id="stats">Average Performance Tracker</div>
+        <table>
+            <thead><tr><th>Student</th><th>Score</th><th>Status</th></tr></thead>
+            <tbody id="resBody"></tbody>
+        </table>
+        <button onclick="resetExam()" style="background:#444;">RESET EVERYTHING</button>
+    </div>
+</div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -81,6 +103,7 @@
     };
 
     window.publishExam = () => {
+        if(tempPaper.length === 0) return alert("Pehle questions add karein!");
         const time = document.getElementById('examTime').value;
         set(ref(db, 'activeExam'), {
             questions: tempPaper,
@@ -97,12 +120,12 @@
         tbody.innerHTML = "";
         if(data) {
             Object.values(data).forEach(s => {
-                tbody.innerHTML += `<tr><td>${s.name}</td><td>${s.score}%</td><td>${s.cheated?'🚨':'✅'}</td></tr>`;
+                tbody.innerHTML += `<tr><td>${s.name}</td><td>${s.score}%</td><td>${s.cheated?'🚨 Disqualified':'✅ Clear'}</td></tr>`;
             });
         }
     });
 
-    window.resetExam = () => { remove(ref(db, '/')); location.reload(); };
+    window.resetExam = () => { if(confirm("Kya aap sab kuch delete karna chahte hain?")) { remove(ref(db, '/')); location.reload(); } };
 </script>
 </body>
 </html>
