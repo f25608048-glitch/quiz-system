@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Student Portal - Authorized Only</title>
+    <title>Student Portal - Multi-Teacher</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: white; text-align: center; padding: 50px; }
         .card { background: #16213e; padding: 30px; border-radius: 15px; display: inline-block; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -15,20 +15,21 @@
 <body>
 
 <div id="loginArea" class="card">
-    <h2>📝 Student Login</h2>
-    <input type="text" id="studentReg" placeholder="Enter Registration Number">
-    <button onclick="attemptEntry()">ENTER EXAM HALL</button>
+    <h2>📝 Student Access</h2>
+    <input type="text" id="teacherID" placeholder="Enter Teacher's Username">
+    <input type="text" id="studentReg" placeholder="Your Registration Number">
+    <button onclick="attemptEntry()">LOGIN & START</button>
 </div>
 
 <div id="quizArea">
-    <div class="timer" id="timer">Time Remaining: --:--</div>
+    <div class="timer" id="timer">--:--</div>
     <div id="questionContent"></div>
     <button onclick="submitExam()" id="submitBtn" style="margin-top:20px; background:#2ed573;">SUBMIT TEST</button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyB0VvfW63xx10C4_l9obcQMC64cDFGndZ8",
@@ -43,23 +44,26 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     let examData = null;
+    let currentTeacher = "";
     let cheated = false;
 
-    onValue(ref(db, 'activeExam'), (snap) => {
-        examData = snap.val();
-    });
-
-    window.attemptEntry = () => {
-        const reg = document.getElementById('studentReg').value;
-        if(!examData) return alert("Teacher has not started any exam yet!");
+    window.attemptEntry = async () => {
+        const tID = document.getElementById('teacherID').value.trim().toLowerCase();
+        const reg = document.getElementById('studentReg').value.trim();
         
-        if(examData.allowedList && examData.allowedList.includes(reg)) {
+        const snapshot = await get(ref(db, 'exams/' + tID));
+        if (!snapshot.exists()) return alert("Teacher ID not found or no exam live!");
+        
+        examData = snapshot.val();
+        currentTeacher = tID;
+
+        if(examData.allowedList.includes(reg)) {
             document.getElementById('loginArea').style.display = 'none';
             document.getElementById('quizArea').style.display = 'block';
             loadQuestions();
             startTimer();
         } else {
-            alert("❌ Your registration number is not authorized for this test!");
+            alert("Registration Number not authorized!");
         }
     };
 
@@ -68,44 +72,37 @@
         examData.questions.forEach((q, i) => {
             let html = `<div style="margin-bottom:20px;"><h3>Q${i+1}: ${q.text}</h3>`;
             if(q.type === 'mcq') {
-                for(let opt in q.options) {
-                    html += `<label><input type="radio" name="q${i}" value="${opt}"> ${q.options[opt]}</label><br>`;
-                }
-            } else {
-                html += `<textarea id="ans${i}" style="width:100%; height:80px;"></textarea>`;
-            }
+                for(let opt in q.options) { html += `<label><input type="radio" name="q${i}" value="${opt}"> ${q.options[opt]}</label><br>`; }
+            } else { html += `<textarea id="ans${i}" style="width:100%; height:60px;"></textarea>`; }
             container.innerHTML += html + `</div>`;
         });
     }
 
     function startTimer() {
-        const interval = setInterval(() => {
+        setInterval(() => {
             const timeLeft = Math.floor((examData.endTime - Date.now()) / 1000);
-            if(timeLeft <= 0) { clearInterval(interval); submitExam(); }
-            document.getElementById('timer').innerText = `Time Remaining: ${Math.floor(timeLeft/60)}:${timeLeft%60}`;
+            if(timeLeft <= 0) { alert("Time Up!"); submitExam(); }
+            document.getElementById('timer').innerText = `Time: ${Math.floor(timeLeft/60)}:${timeLeft%60}`;
         }, 1000);
     }
 
-    // Anti-Cheat (Tab Switch Detection)
-    window.onblur = () => { cheated = true; alert("🚨 Warning: Tab switching detected! This will be reported."); };
+    window.onblur = () => { cheated = true; };
 
     window.submitExam = () => {
         let score = 0;
         examData.questions.forEach((q, i) => {
             if(q.type === 'mcq') {
-                const selected = document.querySelector(`input[name="q${i}"]:checked`)?.value;
-                if(selected === q.correct) score++;
-            } else {
-                score++; // Subjective markers placeholder
-            }
+                const sel = document.querySelector(`input[name="q${i}"]:checked`)?.value;
+                if(sel === q.correct) score++;
+            } else { score++; }
         });
         const finalScore = Math.round((score / examData.questions.length) * 100);
-        set(ref(db, 'submissions/' + document.getElementById('studentReg').value), {
+        set(ref(db, `exams/${currentTeacher}/submissions/${document.getElementById('studentReg').value}`), {
             name: document.getElementById('studentReg').value,
             score: finalScore,
             cheated: cheated
         });
-        alert("Exam Submitted Successfully!");
+        alert("Submitted!");
         location.reload();
     };
 </script>
