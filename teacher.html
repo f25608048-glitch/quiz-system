@@ -2,33 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Professional Teacher Portal</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .auth-card { background: #1e293b; padding: 40px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .container { max-width: 1200px; margin: 20px; display: none; gap: 20px; width: 95%; align-items: flex-start; }
-        .box { background: #1e293b; padding: 25px; border-radius: 12px; flex: 1; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; margin: 0; min-height: 100vh; }
+        
+        /* 🔐 Login Screen Styling */
+        #authScreen { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100vh; width: 100%; position: fixed; top: 0; left: 0; background: #0f172a; z-index: 100;
+        }
+        .auth-card { background: #1e293b; padding: 40px; border-radius: 15px; width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* 👨‍🏫 Dashboard Styling */
+        .container { max-width: 1200px; margin: auto; display: none; padding: 20px; gap: 20px; flex-wrap: wrap; }
+        .box { background: #1e293b; padding: 25px; border-radius: 12px; flex: 1; min-width: 300px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; box-sizing: border-box; background: #f1f5f9; color: #0f172a; }
         button { background: #3b82f6; color: white; border: none; padding: 14px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; transition: 0.3s; }
         button:hover { background: #2563eb; }
+        
         .q-item { background: #0f172a; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #10b981; font-size: 0.9rem; }
         .toggle-link { color: #3b82f6; cursor: pointer; text-decoration: underline; font-size: 0.9rem; margin-top: 15px; display: block; }
-        #emailField { display: block; }
-        .error { color: #ef4444; font-size: 0.8rem; margin-top: 5px; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; }
     </style>
 </head>
 <body>
 
-<div id="authScreen" class="auth-card">
-    <h2 id="authTitle">Create Account</h2>
-    <div id="emailField"><input type="email" id="tEmail" placeholder="Gmail Address"></div>
-    <input type="text" id="tUser" placeholder="Username (Unique)">
-    <input type="password" id="tPass" placeholder="Password">
-    <button onclick="handleAuth()" id="authBtn">Sign Up</button>
-    <p id="errorMsg" class="error"></p>
-    <span class="toggle-link" id="toggleLink" onclick="toggleAuth()">Already have an account? Login</span>
+<div id="authScreen">
+    <div class="auth-card">
+        <h2 id="authTitle">Create Account</h2>
+        <div id="emailField"><input type="email" id="tEmail" placeholder="Gmail Address"></div>
+        <input type="text" id="tUser" placeholder="Username (Unique)">
+        <input type="password" id="tPass" placeholder="Password">
+        <button onclick="handleAuth()" id="authBtn">Sign Up</button>
+        <span class="toggle-link" id="toggleLink" onclick="toggleAuth()">Already have an account? Login</span>
+    </div>
 </div>
 
 <div class="container" id="dashboard">
@@ -46,12 +57,12 @@
         </select>
         <input type="text" id="qText" placeholder="Enter Question Here">
         
-        <div id="mcqFields" style="display:none; background:#0f172a; padding:15px; border-radius:8px;">
+        <div id="mcqFields" style="display:none; background:#0f172a; padding:15px; border-radius:8px; margin: 10px 0;">
             <input type="text" id="optA" placeholder="Option A">
             <input type="text" id="optB" placeholder="Option B">
             <input type="text" id="optC" placeholder="Option C">
             <input type="text" id="optD" placeholder="Option D">
-            <select id="correctOpt">
+            <select id="correctOpt" style="background: white;">
                 <option value="A">Correct: A</option><option value="B">Correct: B</option>
                 <option value="C">Correct: C</option><option value="D">Correct: D</option>
             </select>
@@ -106,18 +117,20 @@
         const user = document.getElementById('tUser').value.trim().toLowerCase();
         const pass = document.getElementById('tPass').value;
         const email = document.getElementById('tEmail').value;
-        if(!user || !pass) return alert("Fill all fields");
+        if(!user || !pass) return alert("Please fill all fields!");
 
         const userRef = ref(db, 'teachers/' + user);
         const snap = await get(userRef);
 
         if (isLoginMode) {
             if (snap.exists() && snap.val().password === pass) startDashboard(user);
-            else alert("Invalid credentials!");
+            else alert("❌ Invalid Username or Password!");
         } else {
-            if (snap.exists()) alert("Username taken!");
+            if (snap.exists()) alert("❌ Username already taken!");
             else {
+                if(!email.includes('@')) return alert("Enter valid Gmail");
                 await set(userRef, { email: email, password: pass });
+                alert("✅ Account Created!");
                 startDashboard(user);
             }
         }
@@ -125,16 +138,14 @@
 
     async function startDashboard(user) {
         currentUser = user;
-        document.body.style.alignItems = "flex-start";
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'flex';
         document.getElementById('welcomeMsg').innerText = "Dashboard: " + user;
 
-        // Load purana data
         const examSnap = await get(ref(db, 'exams/' + user));
         if(examSnap.exists()) {
             tempPaper = examSnap.val().questions || [];
-            document.getElementById('rollList').value = examSnap.val().allowedList.join(', ');
+            document.getElementById('rollList').value = (examSnap.val().allowedList || []).join(', ');
             renderPreview();
         }
 
@@ -171,7 +182,7 @@
             allowedList: rolls,
             endTime: Date.now() + (document.getElementById('examTime').value * 1000)
         });
-        alert("Exam Published Successfully!");
+        alert("🚀 Exam Published Successfully!");
     };
 </script>
 </body>
