@@ -1,3 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Professional Teacher Portal</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .auth-card { background: #1e293b; padding: 40px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .container { max-width: 1200px; margin: 20px; display: none; gap: 20px; width: 95%; align-items: flex-start; }
+        .box { background: #1e293b; padding: 25px; border-radius: 12px; flex: 1; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; box-sizing: border-box; }
+        button { background: #3b82f6; color: white; border: none; padding: 14px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; transition: 0.3s; }
+        button:hover { background: #2563eb; }
+        .q-item { background: #0f172a; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #10b981; font-size: 0.9rem; }
+        .toggle-link { color: #3b82f6; cursor: pointer; text-decoration: underline; font-size: 0.9rem; margin-top: 15px; display: block; }
+        #emailField { display: block; }
+        .error { color: #ef4444; font-size: 0.8rem; margin-top: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; }
+    </style>
+</head>
+<body>
+
+<div id="authScreen" class="auth-card">
+    <h2 id="authTitle">Create Account</h2>
+    <div id="emailField"><input type="email" id="tEmail" placeholder="Gmail Address"></div>
+    <input type="text" id="tUser" placeholder="Username (Unique)">
+    <input type="password" id="tPass" placeholder="Password">
+    <button onclick="handleAuth()" id="authBtn">Sign Up</button>
+    <p id="errorMsg" class="error"></p>
+    <span class="toggle-link" id="toggleLink" onclick="toggleAuth()">Already have an account? Login</span>
+</div>
+
+<div class="container" id="dashboard">
+    <div class="box">
+        <h2 id="welcomeMsg">Welcome</h2>
+        <h3>1. Exam Settings</h3>
+        <textarea id="rollList" placeholder="Allowed Rolls (e.g. 101, 102, 103)"></textarea>
+        
+        <hr style="border:0.5px solid #334155; margin:20px 0;">
+        
+        <h3>2. Add Questions</h3>
+        <select id="qType" onchange="document.getElementById('mcqFields').style.display=(this.value=='mcq'?'block':'none')">
+            <option value="subjective">Subjective Question</option>
+            <option value="mcq">MCQ (Multiple Choice)</option>
+        </select>
+        <input type="text" id="qText" placeholder="Enter Question Here">
+        
+        <div id="mcqFields" style="display:none; background:#0f172a; padding:15px; border-radius:8px;">
+            <input type="text" id="optA" placeholder="Option A">
+            <input type="text" id="optB" placeholder="Option B">
+            <input type="text" id="optC" placeholder="Option C">
+            <input type="text" id="optD" placeholder="Option D">
+            <select id="correctOpt">
+                <option value="A">Correct: A</option><option value="B">Correct: B</option>
+                <option value="C">Correct: C</option><option value="D">Correct: D</option>
+            </select>
+        </div>
+        
+        <button onclick="addToPaper()" style="background:#6366f1;">Add Question ➕</button>
+        <div id="paperPreview" style="margin-top:15px;"></div>
+        
+        <input type="number" id="examTime" placeholder="Duration (Seconds)" value="300">
+        <button onclick="publishExam()" style="background:#10b981; margin-top:20px;">PUBLISH EXAM 🚀</button>
+    </div>
+
+    <div class="box" style="max-width: 400px;">
+        <h3>📊 Live Results</h3>
+        <table>
+            <thead><tr><th>Roll No</th><th>Score</th><th>Status</th></tr></thead>
+            <tbody id="resBody"></tbody>
+        </table>
+        <button onclick="location.reload()" style="background:#475569; margin-top:30px;">Logout Safely</button>
+    </div>
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -16,6 +92,7 @@
     const db = getDatabase(app);
     let isLoginMode = false;
     let currentUser = "";
+    let tempPaper = [];
 
     window.toggleAuth = () => {
         isLoginMode = !isLoginMode;
@@ -23,33 +100,24 @@
         document.getElementById('authBtn').innerText = isLoginMode ? "Login" : "Sign Up";
         document.getElementById('emailField').style.display = isLoginMode ? "none" : "block";
         document.getElementById('toggleLink').innerText = isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Login";
-        document.getElementById('errorMsg').innerText = "";
     };
 
     window.handleAuth = async () => {
         const user = document.getElementById('tUser').value.trim().toLowerCase();
         const pass = document.getElementById('tPass').value;
         const email = document.getElementById('tEmail').value;
-        const errorMsg = document.getElementById('errorMsg');
-
-        if(!user || !pass) return alert("Please fill all fields");
+        if(!user || !pass) return alert("Fill all fields");
 
         const userRef = ref(db, 'teachers/' + user);
         const snap = await get(userRef);
 
         if (isLoginMode) {
-            if (snap.exists() && snap.val().password === pass) {
-                startDashboard(user);
-            } else {
-                errorMsg.innerText = "❌ Invalid Username or Password!";
-            }
+            if (snap.exists() && snap.val().password === pass) startDashboard(user);
+            else alert("Invalid credentials!");
         } else {
-            if (snap.exists()) {
-                errorMsg.innerText = "❌ Username already taken! Try another.";
-            } else {
-                if(!email.includes('@')) return alert("Enter valid Gmail");
+            if (snap.exists()) alert("Username taken!");
+            else {
                 await set(userRef, { email: email, password: pass });
-                alert("✅ Account Created Successfully!");
                 startDashboard(user);
             }
         }
@@ -57,42 +125,54 @@
 
     async function startDashboard(user) {
         currentUser = user;
+        document.body.style.alignItems = "flex-start";
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'flex';
-        document.getElementById('welcomeMsg').innerText = "Welcome, " + user;
-        
-        // Auto-load purana data agar koi hai
+        document.getElementById('welcomeMsg').innerText = "Dashboard: " + user;
+
+        // Load purana data
         const examSnap = await get(ref(db, 'exams/' + user));
         if(examSnap.exists()) {
+            tempPaper = examSnap.val().questions || [];
             document.getElementById('rollList').value = examSnap.val().allowedList.join(', ');
+            renderPreview();
         }
 
-        // Real-time Results Load
         onValue(ref(db, 'exams/' + user + '/submissions'), (snap) => {
-            const list = document.getElementById('resList');
-            list.innerHTML = "";
-            if(snap.exists()){
+            const tbody = document.getElementById('resBody');
+            tbody.innerHTML = "";
+            if(snap.exists()) {
                 Object.values(snap.val()).forEach(s => {
-                    list.innerHTML += `<div style="background:#0f172a; padding:10px; margin:5px 0; border-radius:5px; border-left:4px solid #3b82f6;">
-                        <b>${s.name}</b>: ${s.score}% ${s.cheated ? '🚨 (Cheated)' : '✅ (Clear)'}
-                    </div>`;
+                    tbody.innerHTML += `<tr><td>${s.name}</td><td>${s.score}%</td><td>${s.cheated?'🚨':'✅'}</td></tr>`;
                 });
-            } else {
-                list.innerHTML = "<p style='color:#94a3b8;'>No students have submitted yet.</p>";
             }
         });
     }
 
+    window.addToPaper = () => {
+        const q = { type: document.getElementById('qType').value, text: document.getElementById('qText').value };
+        if(q.type === 'mcq') {
+            q.options = { A: document.getElementById('optA').value, B: document.getElementById('optB').value, C: document.getElementById('optC').value, D: document.getElementById('optD').value };
+            q.correct = document.getElementById('correctOpt').value;
+        }
+        tempPaper.push(q);
+        renderPreview();
+    };
+
+    function renderPreview() {
+        document.getElementById('paperPreview').innerHTML = tempPaper.map((q, i) => `<div class="q-item">Q${i+1}: ${q.text}</div>`).join('');
+    }
+
     window.publishExam = () => {
         const rolls = document.getElementById('rollList').value.split(',').map(r => r.trim());
-        if(!rolls[0]) return alert("Please enter allowed Roll Numbers!");
-
-        // Yahan aap apne questions ki array bhi dal sakte hain
+        if(!rolls[0]) return alert("Add allowed roll numbers!");
         set(ref(db, 'exams/' + currentUser), {
+            questions: tempPaper,
             allowedList: rolls,
-            status: "live",
-            lastUpdated: Date.now()
+            endTime: Date.now() + (document.getElementById('examTime').value * 1000)
         });
-        alert("🚀 Exam Published! Students of " + currentUser + " can now login.");
+        alert("Exam Published Successfully!");
     };
 </script>
+</body>
+</html>
