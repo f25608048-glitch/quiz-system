@@ -2,91 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional Teacher Portal</title>
+    <title>Teacher Portal - Secure Auth</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; margin: 0; min-height: 100vh; }
-        
-        /* 🔐 Login Screen Styling */
-        #authScreen { 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            height: 100vh; width: 100%; position: fixed; top: 0; left: 0; background: #0f172a; z-index: 100;
-        }
-        .auth-card { background: #1e293b; padding: 40px; border-radius: 15px; width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        /* 👨‍🏫 Dashboard Styling */
-        .container { max-width: 1200px; margin: auto; display: none; padding: 20px; gap: 20px; flex-wrap: wrap; }
-        .box { background: #1e293b; padding: 25px; border-radius: 12px; flex: 1; min-width: 300px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; box-sizing: border-box; background: #f1f5f9; color: #0f172a; }
-        button { background: #3b82f6; color: white; border: none; padding: 14px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; transition: 0.3s; }
-        button:hover { background: #2563eb; }
-        
-        .q-item { background: #0f172a; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #10b981; font-size: 0.9rem; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        #authScreen { background: #1e293b; padding: 40px; border-radius: 15px; width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .container { max-width: 1200px; margin: 20px; display: none; gap: 20px; width: 95%; flex-wrap: wrap; }
+        .box { background: #1e293b; padding: 25px; border-radius: 12px; flex: 1; min-width: 300px; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; box-sizing: border-box; }
+        button { background: #3b82f6; color: white; border: none; padding: 14px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
         .toggle-link { color: #3b82f6; cursor: pointer; text-decoration: underline; font-size: 0.9rem; margin-top: 15px; display: block; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; }
+        .q-item { background: #0f172a; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #10b981; }
     </style>
 </head>
 <body>
 
 <div id="authScreen">
-    <div class="auth-card">
-        <h2 id="authTitle">Create Account</h2>
-        <div id="emailField"><input type="email" id="tEmail" placeholder="Gmail Address"></div>
-        <input type="text" id="tUser" placeholder="Username (Unique)">
-        <input type="password" id="tPass" placeholder="Password">
-        <button onclick="handleAuth()" id="authBtn">Sign Up</button>
-        <span class="toggle-link" id="toggleLink" onclick="toggleAuth()">Already have an account? Login</span>
-    </div>
+    <h2 id="authTitle">Create Account</h2>
+    <div id="emailField"><input type="email" id="tEmail" placeholder="Gmail Address"></div>
+    <input type="text" id="tUser" placeholder="Username (For Students)">
+    <input type="password" id="tPass" placeholder="Password (Min 6 chars)">
+    <button onclick="handleAuth()" id="authBtn">Sign Up</button>
+    <span class="toggle-link" id="toggleLink" onclick="toggleAuth()">Already have an account? Login</span>
 </div>
 
 <div class="container" id="dashboard">
     <div class="box">
         <h2 id="welcomeMsg">Welcome</h2>
-        <h3>1. Exam Settings</h3>
-        <textarea id="rollList" placeholder="Allowed Rolls (e.g. 101, 102, 103)"></textarea>
-        
-        <hr style="border:0.5px solid #334155; margin:20px 0;">
-        
-        <h3>2. Add Questions</h3>
-        <select id="qType" onchange="document.getElementById('mcqFields').style.display=(this.value=='mcq'?'block':'none')">
-            <option value="subjective">Subjective Question</option>
-            <option value="mcq">MCQ (Multiple Choice)</option>
-        </select>
-        <input type="text" id="qText" placeholder="Enter Question Here">
-        
-        <div id="mcqFields" style="display:none; background:#0f172a; padding:15px; border-radius:8px; margin: 10px 0;">
-            <input type="text" id="optA" placeholder="Option A">
-            <input type="text" id="optB" placeholder="Option B">
-            <input type="text" id="optC" placeholder="Option C">
-            <input type="text" id="optD" placeholder="Option D">
-            <select id="correctOpt" style="background: white;">
-                <option value="A">Correct: A</option><option value="B">Correct: B</option>
-                <option value="C">Correct: C</option><option value="D">Correct: D</option>
-            </select>
-        </div>
-        
-        <button onclick="addToPaper()" style="background:#6366f1;">Add Question ➕</button>
-        <div id="paperPreview" style="margin-top:15px;"></div>
-        
-        <input type="number" id="examTime" placeholder="Duration (Seconds)" value="300">
-        <button onclick="publishExam()" style="background:#10b981; margin-top:20px;">PUBLISH EXAM 🚀</button>
+        <h3>1. Allowed Students</h3>
+        <textarea id="rollList" placeholder="Enter Roll Numbers (e.g. 101, 102)"></textarea>
+        <h3>2. Questions</h3>
+        <input type="text" id="qText" placeholder="Question Text">
+        <button onclick="addQuestion()" style="background:#6366f1;">Add Question</button>
+        <div id="preview"></div>
+        <button onclick="publish()" style="background:#10b981; margin-top:20px;">Publish Exam 🚀</button>
     </div>
-
-    <div class="box" style="max-width: 400px;">
-        <h3>📊 Live Results</h3>
-        <table>
-            <thead><tr><th>Roll No</th><th>Score</th><th>Status</th></tr></thead>
-            <tbody id="resBody"></tbody>
-        </table>
-        <button onclick="location.reload()" style="background:#475569; margin-top:30px;">Logout Safely</button>
+    <div class="box" style="max-width: 350px;">
+        <h3>📊 Results</h3>
+        <div id="resList"></div>
+        <button onclick="location.reload()" style="background:#444;">Logout</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
@@ -100,89 +59,64 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getDatabase(app);
     let isLoginMode = false;
-    let currentUser = "";
-    let tempPaper = [];
+    let currentTeacherID = "";
+    let questions = [];
 
     window.toggleAuth = () => {
         isLoginMode = !isLoginMode;
-        document.getElementById('authTitle').innerText = isLoginMode ? "Teacher Login" : "Create Teacher Account";
+        document.getElementById('authTitle').innerText = isLoginMode ? "Login" : "Create Account";
         document.getElementById('authBtn').innerText = isLoginMode ? "Login" : "Sign Up";
-        document.getElementById('emailField').style.display = isLoginMode ? "none" : "block";
-        document.getElementById('toggleLink').innerText = isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Login";
+        document.getElementById('toggleLink').innerText = isLoginMode ? "New here? Sign Up" : "Have an account? Login";
     };
 
-    window.handleAuth = async () => {
-        const user = document.getElementById('tUser').value.trim().toLowerCase();
-        const pass = document.getElementById('tPass').value;
+    window.handleAuth = () => {
         const email = document.getElementById('tEmail').value;
-        if(!user || !pass) return alert("Please fill all fields!");
-
-        const userRef = ref(db, 'teachers/' + user);
-        const snap = await get(userRef);
+        const pass = document.getElementById('tPass').value;
+        const user = document.getElementById('tUser').value.trim().toLowerCase();
 
         if (isLoginMode) {
-            if (snap.exists() && snap.val().password === pass) startDashboard(user);
-            else alert("❌ Invalid Username or Password!");
+            signInWithEmailAndPassword(auth, email, pass)
+                .then(() => loadDashboard(user))
+                .catch(err => alert("Error: " + err.message));
         } else {
-            if (snap.exists()) alert("❌ Username already taken!");
-            else {
-                if(!email.includes('@')) return alert("Enter valid Gmail");
-                await set(userRef, { email: email, password: pass });
-                alert("✅ Account Created!");
-                startDashboard(user);
-            }
+            createUserWithEmailAndPassword(auth, email, pass)
+                .then(async () => {
+                    await set(ref(db, 'teachers/' + user), { email: email });
+                    loadDashboard(user);
+                })
+                .catch(err => alert("Error: " + err.message));
         }
     };
 
-    async function startDashboard(user) {
-        currentUser = user;
-        document.getElementById('authScreen').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'flex';
-        document.getElementById('welcomeMsg').innerText = "Dashboard: " + user;
-
-        const examSnap = await get(ref(db, 'exams/' + user));
-        if(examSnap.exists()) {
-            tempPaper = examSnap.val().questions || [];
-            document.getElementById('rollList').value = (examSnap.val().allowedList || []).join(', ');
-            renderPreview();
-        }
+    function loadDashboard(user) {
+        currentTeacherID = user;
+        document.getElementById('authScreen').style.display = "none";
+        document.getElementById('dashboard').style.display = "flex";
+        document.getElementById('welcomeMsg').innerText = "Teacher ID: " + user;
 
         onValue(ref(db, 'exams/' + user + '/submissions'), (snap) => {
-            const tbody = document.getElementById('resBody');
-            tbody.innerHTML = "";
-            if(snap.exists()) {
+            const list = document.getElementById('resList');
+            list.innerHTML = "";
+            if(snap.exists()){
                 Object.values(snap.val()).forEach(s => {
-                    tbody.innerHTML += `<tr><td>${s.name}</td><td>${s.score}%</td><td>${s.cheated?'🚨':'✅'}</td></tr>`;
+                    list.innerHTML += `<div class='q-item'>${s.name}: ${s.score}%</div>`;
                 });
             }
         });
     }
 
-    window.addToPaper = () => {
-        const q = { type: document.getElementById('qType').value, text: document.getElementById('qText').value };
-        if(q.type === 'mcq') {
-            q.options = { A: document.getElementById('optA').value, B: document.getElementById('optB').value, C: document.getElementById('optC').value, D: document.getElementById('optD').value };
-            q.correct = document.getElementById('correctOpt').value;
-        }
-        tempPaper.push(q);
-        renderPreview();
+    window.addQuestion = () => {
+        questions.push({ text: document.getElementById('qText').value, type: 'subjective' });
+        document.getElementById('preview').innerHTML += `<div class='q-item'>${document.getElementById('qText').value}</div>`;
     };
 
-    function renderPreview() {
-        document.getElementById('paperPreview').innerHTML = tempPaper.map((q, i) => `<div class="q-item">Q${i+1}: ${q.text}</div>`).join('');
-    }
-
-    window.publishExam = () => {
-        const rolls = document.getElementById('rollList').value.split(',').map(r => r.trim());
-        if(!rolls[0]) return alert("Add allowed roll numbers!");
-        set(ref(db, 'exams/' + currentUser), {
-            questions: tempPaper,
-            allowedList: rolls,
-            endTime: Date.now() + (document.getElementById('examTime').value * 1000)
-        });
-        alert("🚀 Exam Published Successfully!");
+    window.publish = () => {
+        const rolls = document.getElementById('rollList').value.split(',');
+        set(ref(db, 'exams/' + currentTeacherID), { questions, allowedList: rolls });
+        alert("Exam Published!");
     };
 </script>
 </body>
