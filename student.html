@@ -2,67 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Teacher Panel - Authorized Access</title>
+    <title>Student Portal - Authorized Only</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: white; padding: 20px; }
-        .container { max-width: 1100px; margin: auto; display: flex; gap: 20px; }
-        .box { background: #16213e; padding: 20px; border-radius: 15px; flex: 1; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: none; box-sizing: border-box; color: #000; }
-        button { background: #e94560; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
-        .q-list-item { background: #0f3460; padding: 10px; margin: 5px 0; border-radius: 5px; font-size: 0.9rem; border-left: 4px solid #2ed573; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #444; padding: 8px; text-align: center; }
-        #passwordProtector { position:fixed; top:0; left:0; width:100%; height:100%; background:#1a1a2e; z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: white; text-align: center; padding: 50px; }
+        .card { background: #16213e; padding: 30px; border-radius: 15px; display: inline-block; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; box-sizing: border-box; }
+        button { background: #e94560; color: white; border: none; padding: 15px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #quizArea { display: none; text-align: left; max-width: 600px; margin: auto; }
+        .timer { font-size: 1.5rem; color: #e94560; font-weight: bold; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-<div id="passwordProtector">
-    <h2>🔐 Admin Access Required</h2>
-    <input type="password" id="adminPass" placeholder="Enter Admin Password" style="width:250px;">
-    <button onclick="checkAdminPass()" style="width:250px;">Login</button>
-    <p id="passError" style="color:red;"></p>
+<div id="loginArea" class="card">
+    <h2>📝 Student Login</h2>
+    <input type="text" id="studentReg" placeholder="Enter Registration Number">
+    <button onclick="attemptEntry()">ENTER EXAM HALL</button>
 </div>
 
-<h2 style="text-align:center;">👨‍🏫 Smart Exam Control Tower</h2>
-<div class="container">
-    <div class="box">
-        <h3>1. Set Allowed Students</h3>
-        <textarea id="rollList" placeholder="Enter Registration Numbers (e.g. 101, 102, 105)" rows="3"></textarea>
-        
-        <h3>2. Design Paper</h3>
-        <select id="qType" onchange="document.getElementById('mcqFields').style.display=(this.value=='mcq'?'block':'none')">
-            <option value="subjective">Subjective</option>
-            <option value="mcq">MCQ</option>
-        </select>
-        <input type="text" id="qText" placeholder="Enter Question...">
-        <div id="mcqFields" style="display:none; background:#0f3460; padding:10px; border-radius:8px;">
-            <input type="text" id="optA" placeholder="Option A">
-            <input type="text" id="optB" placeholder="Option B">
-            <input type="text" id="optC" placeholder="Option C">
-            <input type="text" id="optD" placeholder="Option D">
-            <select id="correctOpt"><option value="A">Correct: A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
-        </div>
-        <button onclick="addToPaper()" style="background:#533483;">ADD QUESTION ➕</button>
-        <div id="paperPreview"></div>
-        <hr>
-        <input type="number" id="examTime" placeholder="Duration (Seconds)" value="120">
-        <button onclick="publishExam()" style="background:#2ed573;">PUBLISH AUTHORIZED EXAM 🚀</button>
-    </div>
-
-    <div class="box">
-        <h3>3. Real-time Results</h3>
-        <table>
-            <thead><tr><th>Roll No</th><th>Score</th><th>Status</th></tr></thead>
-            <tbody id="resBody"></tbody>
-        </table>
-        <button onclick="resetExam()" style="background:#444;">RESET EVERYTHING</button>
-    </div>
+<div id="quizArea">
+    <div class="timer" id="timer">Time Remaining: --:--</div>
+    <div id="questionContent"></div>
+    <button onclick="submitExam()" id="submitBtn" style="margin-top:20px; background:#2ed573;">SUBMIT TEST</button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyB0VvfW63xx10C4_l9obcQMC64cDFGndZ8",
@@ -76,48 +42,72 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    let tempPaper = [];
+    let examData = null;
+    let cheated = false;
 
-    window.checkAdminPass = () => {
-        if(document.getElementById('adminPass').value === "admin123") 
-            document.getElementById('passwordProtector').style.display='none';
-        else document.getElementById('passError').innerText="Wrong Password!";
-    };
-
-    window.addToPaper = () => {
-        const q = { type: document.getElementById('qType').value, text: document.getElementById('qText').value };
-        if(q.type === 'mcq') {
-            q.options = { A: document.getElementById('optA').value, B: document.getElementById('optB').value, C: document.getElementById('optC').value, D: document.getElementById('optD').value };
-            q.correct = document.getElementById('correctOpt').value;
-        }
-        tempPaper.push(q);
-        document.getElementById('paperPreview').innerHTML += `<div class="q-list-item">${q.text}</div>`;
-    };
-
-    window.publishExam = () => {
-        const rolls = document.getElementById('rollList').value.split(',').map(r => r.trim());
-        if(!rolls[0]) return alert("Please enter allowed Roll Numbers!");
-        set(ref(db, 'activeExam'), {
-            questions: tempPaper,
-            endTime: Date.now() + (document.getElementById('examTime').value * 1000),
-            status: "live",
-            allowedList: rolls
-        });
-        remove(ref(db, 'submissions'));
-        alert("Exam is now Live for registered students!");
-    };
-
-    onValue(ref(db, 'submissions'), (snap) => {
-        const tbody = document.getElementById('resBody');
-        tbody.innerHTML = "";
-        if(snap.val()) {
-            Object.values(snap.val()).forEach(s => {
-                tbody.innerHTML += `<tr><td>${s.name}</td><td>${s.score}%</td><td>${s.cheated?'🚨':'✅'}</td></tr>`;
-            });
-        }
+    onValue(ref(db, 'activeExam'), (snap) => {
+        examData = snap.val();
     });
 
-    window.resetExam = () => { if(confirm("Delete all data?")) { remove(ref(db, '/')); location.reload(); } };
+    window.attemptEntry = () => {
+        const reg = document.getElementById('studentReg').value;
+        if(!examData) return alert("Teacher has not started any exam yet!");
+        
+        if(examData.allowedList && examData.allowedList.includes(reg)) {
+            document.getElementById('loginArea').style.display = 'none';
+            document.getElementById('quizArea').style.display = 'block';
+            loadQuestions();
+            startTimer();
+        } else {
+            alert("❌ Your registration number is not authorized for this test!");
+        }
+    };
+
+    function loadQuestions() {
+        const container = document.getElementById('questionContent');
+        examData.questions.forEach((q, i) => {
+            let html = `<div style="margin-bottom:20px;"><h3>Q${i+1}: ${q.text}</h3>`;
+            if(q.type === 'mcq') {
+                for(let opt in q.options) {
+                    html += `<label><input type="radio" name="q${i}" value="${opt}"> ${q.options[opt]}</label><br>`;
+                }
+            } else {
+                html += `<textarea id="ans${i}" style="width:100%; height:80px;"></textarea>`;
+            }
+            container.innerHTML += html + `</div>`;
+        });
+    }
+
+    function startTimer() {
+        const interval = setInterval(() => {
+            const timeLeft = Math.floor((examData.endTime - Date.now()) / 1000);
+            if(timeLeft <= 0) { clearInterval(interval); submitExam(); }
+            document.getElementById('timer').innerText = `Time Remaining: ${Math.floor(timeLeft/60)}:${timeLeft%60}`;
+        }, 1000);
+    }
+
+    // Anti-Cheat (Tab Switch Detection)
+    window.onblur = () => { cheated = true; alert("🚨 Warning: Tab switching detected! This will be reported."); };
+
+    window.submitExam = () => {
+        let score = 0;
+        examData.questions.forEach((q, i) => {
+            if(q.type === 'mcq') {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`)?.value;
+                if(selected === q.correct) score++;
+            } else {
+                score++; // Subjective markers placeholder
+            }
+        });
+        const finalScore = Math.round((score / examData.questions.length) * 100);
+        set(ref(db, 'submissions/' + document.getElementById('studentReg').value), {
+            name: document.getElementById('studentReg').value,
+            score: finalScore,
+            cheated: cheated
+        });
+        alert("Exam Submitted Successfully!");
+        location.reload();
+    };
 </script>
 </body>
 </html>
