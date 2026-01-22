@@ -2,47 +2,37 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Teacher Panel - Bulk Exam Mode</title>
+    <title>Teacher Panel - Authorized Access</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: white; padding: 20px; }
         .container { max-width: 1100px; margin: auto; display: flex; gap: 20px; }
         .box { background: #16213e; padding: 20px; border-radius: 15px; flex: 1; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        input, select { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: none; box-sizing: border-box; color: #000; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: none; box-sizing: border-box; color: #000; }
         button { background: #e94560; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
         .q-list-item { background: #0f3460; padding: 10px; margin: 5px 0; border-radius: 5px; font-size: 0.9rem; border-left: 4px solid #2ed573; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #444; padding: 8px; text-align: center; }
-        /* Password Screen Style */
         #passwordProtector { position:fixed; top:0; left:0; width:100%; height:100%; background:#1a1a2e; z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     </style>
 </head>
 <body>
 
 <div id="passwordProtector">
-    <h2 style="color:white;">🔐 Admin Access Required</h2>
-    <input type="password" id="adminPass" placeholder="Enter Admin Password" style="width: 250px; text-align: center;">
-    <button onclick="checkAdminPass()" style="width: 250px; background:#e94560;">Login</button>
-    <p id="passError" style="color:red; margin-top:10px;"></p>
+    <h2>🔐 Admin Access Required</h2>
+    <input type="password" id="adminPass" placeholder="Enter Admin Password" style="width:250px;">
+    <button onclick="checkAdminPass()" style="width:250px;">Login</button>
+    <p id="passError" style="color:red;"></p>
 </div>
 
-<script>
-    function checkAdminPass() {
-        const pass = document.getElementById('adminPass').value;
-        const correctPass = "admin123"; // Aapka password
-        if(pass === correctPass) {
-            document.getElementById('passwordProtector').style.display = 'none';
-        } else {
-            document.getElementById('passError').innerText = "Incorrect Password!";
-        }
-    }
-</script>
-
-<h2 style="text-align:center;">👨‍🏫 Exam Creator (Bulk Mode)</h2>
+<h2 style="text-align:center;">👨‍🏫 Smart Exam Control Tower</h2>
 <div class="container">
     <div class="box">
-        <h3>1. Design Paper</h3>
+        <h3>1. Set Allowed Students</h3>
+        <textarea id="rollList" placeholder="Enter Registration Numbers (e.g. 101, 102, 105)" rows="3"></textarea>
+        
+        <h3>2. Design Paper</h3>
         <select id="qType" onchange="document.getElementById('mcqFields').style.display=(this.value=='mcq'?'block':'none')">
-            <option value="subjective">Subjective (Long Ans)</option>
+            <option value="subjective">Subjective</option>
             <option value="mcq">MCQ</option>
         </select>
         <input type="text" id="qText" placeholder="Enter Question...">
@@ -53,18 +43,17 @@
             <input type="text" id="optD" placeholder="Option D">
             <select id="correctOpt"><option value="A">Correct: A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
         </div>
-        <button onclick="addToPaper()" style="background:#533483;">ADD TO PAPER ➕</button>
+        <button onclick="addToPaper()" style="background:#533483;">ADD QUESTION ➕</button>
         <div id="paperPreview"></div>
         <hr>
-        <input type="number" id="examTime" placeholder="Exam Duration (Seconds)" value="120">
-        <button onclick="publishExam()" style="background:#2ed573; font-size:1.2rem;">PUBLISH FULL EXAM 🚀</button>
+        <input type="number" id="examTime" placeholder="Duration (Seconds)" value="120">
+        <button onclick="publishExam()" style="background:#2ed573;">PUBLISH AUTHORIZED EXAM 🚀</button>
     </div>
 
     <div class="box">
-        <h3>2. Results & Performance</h3>
-        <div id="stats">Average Performance Tracker</div>
+        <h3>3. Real-time Results</h3>
         <table>
-            <thead><tr><th>Student</th><th>Score</th><th>Status</th></tr></thead>
+            <thead><tr><th>Roll No</th><th>Score</th><th>Status</th></tr></thead>
             <tbody id="resBody"></tbody>
         </table>
         <button onclick="resetExam()" style="background:#444;">RESET EVERYTHING</button>
@@ -89,11 +78,14 @@
     const db = getDatabase(app);
     let tempPaper = [];
 
+    window.checkAdminPass = () => {
+        if(document.getElementById('adminPass').value === "admin123") 
+            document.getElementById('passwordProtector').style.display='none';
+        else document.getElementById('passError').innerText="Wrong Password!";
+    };
+
     window.addToPaper = () => {
-        const q = {
-            type: document.getElementById('qType').value,
-            text: document.getElementById('qText').value,
-        };
+        const q = { type: document.getElementById('qType').value, text: document.getElementById('qText').value };
         if(q.type === 'mcq') {
             q.options = { A: document.getElementById('optA').value, B: document.getElementById('optB').value, C: document.getElementById('optC').value, D: document.getElementById('optD').value };
             q.correct = document.getElementById('correctOpt').value;
@@ -103,29 +95,29 @@
     };
 
     window.publishExam = () => {
-        if(tempPaper.length === 0) return alert("Pehle questions add karein!");
-        const time = document.getElementById('examTime').value;
+        const rolls = document.getElementById('rollList').value.split(',').map(r => r.trim());
+        if(!rolls[0]) return alert("Please enter allowed Roll Numbers!");
         set(ref(db, 'activeExam'), {
             questions: tempPaper,
-            endTime: Date.now() + (time * 1000),
-            status: "live"
+            endTime: Date.now() + (document.getElementById('examTime').value * 1000),
+            status: "live",
+            allowedList: rolls
         });
         remove(ref(db, 'submissions'));
-        alert("Exam is now Live!");
+        alert("Exam is now Live for registered students!");
     };
 
     onValue(ref(db, 'submissions'), (snap) => {
-        const data = snap.val();
         const tbody = document.getElementById('resBody');
         tbody.innerHTML = "";
-        if(data) {
-            Object.values(data).forEach(s => {
-                tbody.innerHTML += `<tr><td>${s.name}</td><td>${s.score}%</td><td>${s.cheated?'🚨 Disqualified':'✅ Clear'}</td></tr>`;
+        if(snap.val()) {
+            Object.values(snap.val()).forEach(s => {
+                tbody.innerHTML += `<tr><td>${s.name}</td><td>${s.score}%</td><td>${s.cheated?'🚨':'✅'}</td></tr>`;
             });
         }
     });
 
-    window.resetExam = () => { if(confirm("Kya aap sab kuch delete karna chahte hain?")) { remove(ref(db, '/')); location.reload(); } };
+    window.resetExam = () => { if(confirm("Delete all data?")) { remove(ref(db, '/')); location.reload(); } };
 </script>
 </body>
 </html>
