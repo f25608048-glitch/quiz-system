@@ -58,6 +58,14 @@
 
     <div class="box" style="max-width: 350px;">
         <h3>📊 Live Results</h3>
+        <input 
+            type="text" 
+            id="rollSearch" 
+            placeholder="🔍 Search Roll Number"
+            oninput="filterResults()"
+            style="margin-bottom:10px;"
+        >
+
         <div id="resList">No submissions yet.</div>
         <button onclick="location.reload()" style="background:#ef4444; margin-top:30px;">Logout</button>
     </div>
@@ -81,8 +89,12 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
+
     let currentID = "";
     let paper = [];
+
+    
+    let allSubmissions = {};
 
     window.toggleFields = () => {
         const type = document.getElementById('qType').value;
@@ -112,18 +124,54 @@
         document.getElementById('dashboard').style.display = "flex";
         document.getElementById('welcomeMsg').innerText = "ID: " + user;
 
+        
         onValue(ref(db, 'exams/' + user + '/submissions'), (snap) => {
-            const list = document.getElementById('resList');
             if(snap.exists()) {
-                list.innerHTML = "";
-                Object.values(snap.val()).forEach(s => {
-                    list.innerHTML += `<div class='q-item'>${s.name}: ${s.score}% ${s.cheated ? '⚠️' : '✅'}</div>`;
-                });
+                allSubmissions = snap.val();
+                renderResults(allSubmissions);
+            } else {
+                document.getElementById('resList').innerHTML = "No submissions yet.";
             }
         });
     }
 
-    // ✨ UPDATED: Add Question + Auto Clear Fields
+    
+    window.renderResults = (data) => {
+        const list = document.getElementById('resList');
+        list.innerHTML = "";
+
+        const entries = Object.entries(data);
+
+        if(entries.length === 0) {
+            list.innerHTML = "No matching results.";
+            return;
+        }
+
+        entries.forEach(([roll, s]) => {
+            list.innerHTML += `
+                <div class='q-item'>
+                    ${roll}: ${s.score}% ${s.cheated ? '⚠️' : '✅'}
+                </div>`;
+        });
+    };
+
+    window.filterResults = () => {
+        const query = document.getElementById('rollSearch').value.toLowerCase();
+
+        if(!query) {
+            renderResults(allSubmissions);
+            return;
+        }
+
+        const filtered = Object.fromEntries(
+            Object.entries(allSubmissions).filter(([roll]) =>
+                roll.toLowerCase().includes(query)
+            )
+        );
+
+        renderResults(filtered);
+    };
+
     window.addQuestion = () => {
         const type = document.getElementById('qType').value;
         const text = document.getElementById('qText').value;
@@ -143,17 +191,11 @@
         }
 
         paper.push(qObj);
-        
-        // Preview update
         document.getElementById('preview').innerHTML += `<div class='q-item'>${text} (${type})</div>`;
-
-        // Clear input boxes for next question
         document.getElementById('qText').value = ""; 
+
         if(type === 'mcq') {
-            document.getElementById('optA').value = ""; 
-            document.getElementById('optB').value = ""; 
-            document.getElementById('optC').value = ""; 
-            document.getElementById('optD').value = ""; 
+            optA.value = optB.value = optC.value = optD.value = "";
         }
     };
 
@@ -170,3 +212,4 @@
 </script>
 </body>
 </html>
+
