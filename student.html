@@ -122,16 +122,62 @@
             z-index: 9999;
             font-weight: bold;
         }
+
+        /* ===== CHEATING OVERLAY ===== */
+        #cheatOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(220, 38, 38, 0.95);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            text-align: center;
+        }
+
+        #cheatOverlay h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        #cheatOverlay p {
+            font-size: 1.3rem;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        #cheatOverlay .icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 
 <body>
 
+    <!-- ===== CHEATING DETECTED OVERLAY ===== -->
+    <div id="cheatOverlay">
+        <div class="icon">🚫</div>
+        <h1>EXAM BLOCKED!</h1>
+        <p>You switched tabs or minimized the window. This is considered cheating.</p>
+        <p style="margin-top: 20px; font-weight: bold;">Your exam has been automatically submitted with a cheating flag.
+        </p>
+        <button onclick="location.reload()"
+            style="max-width: 200px; margin-top: 30px; background: white; color: #dc2626;">
+            Return to Login
+        </button>
+    </div>
+
     <!-- ===== DARK/LIGHT MODE BUTTON ===== -->
     <button id="themeBtn">🌙 Dark Mode</button>
 
     <div id="loginArea" class="card">
-        <h2>👨‍🎓 Student Entry</h2>
+        <h2>👨🎓 Student Entry</h2>
         <input type="text" id="studentName" placeholder="Your Full Name (Optional)">
         <input type="email" id="sEmail" placeholder="Your Gmail Address">
         <input type="password" id="sPass" placeholder="Password (6+ chars)">
@@ -168,7 +214,10 @@
         let examData = null;
         let currentTeacher = "";
         let cheated = false;
+        let examBlocked = false;  // NEW: Flag to prevent multiple submissions
+        let examStarted = false;  // NEW: Track if exam has started
         let timeLeft = 600;
+        let timerInterval = null; // Store timer reference
 
         // ===== NEW: Function to log student login =====
         async function logStudentLogin(teacherID, studentData) {
@@ -224,6 +273,11 @@
                 document.getElementById('quizArea').style.display = 'block';
                 loadQuestions();
                 startTimer();
+
+                // ===== NEW: Mark exam as started and enable cheating detection =====
+                examStarted = true;
+                enableCheatingDetection();
+
             } catch (e) { alert(e.message); }
         };
 
@@ -249,24 +303,124 @@
         }
 
         function startTimer() {
-            const timerObj = setInterval(() => {
+            timerInterval = setInterval(() => {
                 timeLeft--;
                 let mins = Math.floor(timeLeft / 60);
                 let secs = timeLeft % 60;
                 document.getElementById('timerDisplay').innerText = `Time Left: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
-                if (timeLeft <= 0) { clearInterval(timerObj); submitExam(); }
+                if (timeLeft <= 0) { clearInterval(timerInterval); submitExam(); }
             }, 1000);
         }
 
-        window.onblur = () => { cheated = true; };
+        // ===== NEW: Cheating Detection with Auto-Submit =====
+        function enableCheatingDetection() {
+            // Detect tab switch or window blur
+            document.addEventListener('visibilitychange', handleCheatAttempt);
+            window.addEventListener('blur', handleCheatAttempt);
+        }
 
-        window.submitExam = async () => {
+        function handleCheatAttempt() {
+            // Only trigger if exam has started and not already blocked
+            if (!examStarted || examBlocked) return;
+
+            // Check if document is hidden (tab switched) or window lost focus
+            if (document.hidden || document.visibilityState === 'hidden') {
+                blockExamAndSubmit();
+            }
+        }
+
+        async function blockExamAndSubmit() {
+            if (examBlocked) return; // Prevent multiple calls
+
+            examBlocked = true;
+            cheated = true;
+
+            // Stop the timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+
+            // Show the cheating overlay immediately
+            document.getElementById('cheatOverlay').style.display = 'flex';
+
+            // Hide the quiz area
+            document.getElementById('quizArea').style.display = 'none';
+
+            // Auto-submit the exam with cheating flag
+            await submitExamWithCheatingFlag();
+        }
+
+        async function submitExamWithCheatingFlag() {
             const reg = document.getElementById('studentReg').value;
             const studentName = document.getElementById('studentName').value.trim() || reg;
             let rightAnswers = 0;
             let wrongAnswers = 0;
             const totalQuestions = examData.questions.length;
-            const answers = {}; // Store all answers
+            const answers = {};
+
+            examData.questions.forEach((q, i) => {
+                if (q.type === 'mcq') {
+                    const selected = document.querySelector(`input[name="q${i}"]:checked`)?.value;
+                    answers[`q${i}`] = {
+                        type: 'mcq',
+                        question: q.text,
+                        selected: selected || 'Not Answered',
+                        correct: q.correct,
+                        isCorrect: selected === q.correct
+                    };
+
+                    if (selected === q.correct) {
+                        rightAnswers++;
+                    } else {
+                        wrongAnswers++;
+                    }
+                } else {
+                    const subjectiveAnswer = document.getElementById(`ans${i}`)?.value || '';
+                    answers[`q${i}`] = {
+                        type: 'subjective',
+                        question: q.text,
+                        answer: subjectiveAnswer,
+                        needsGrading: true
+                    };
+                    rightAnswers++;
+                }
+            });
+
+            const finalScore = Math.round((rightAnswers / totalQuestions) * 100);
+
+            await set(ref(db, `exams/${currentTeacher}/submissions/${reg}`), {
+                name: studentName,
+                rollNumber: reg,
+                score: finalScore,
+                totalQuestions: totalQuestions,
+                rightAnswers: rightAnswers,
+                wrongAnswers: wrongAnswers,
+                answers: answers,
+                cheated: true,  // Always true when auto-submitted due to cheating
+                cheatingReason: "Tab switch or window blur detected",
+                time: new Date().toLocaleTimeString(),
+                submittedAt: new Date().toISOString(),
+                autoSubmitted: true
+            });
+        }
+
+        window.submitExam = async () => {
+            // Prevent submission if already blocked
+            if (examBlocked) return;
+
+            examBlocked = true; // Prevent double submission
+
+            // Stop timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+
+            const reg = document.getElementById('studentReg').value;
+            const studentName = document.getElementById('studentName').value.trim() || reg;
+            let rightAnswers = 0;
+            let wrongAnswers = 0;
+            const totalQuestions = examData.questions.length;
+            const answers = {};
 
             examData.questions.forEach((q, i) => {
                 if (q.type === 'mcq') {
@@ -284,10 +438,9 @@
                     } else if (selected) {
                         wrongAnswers++;
                     } else {
-                        wrongAnswers++; // Unanswered counts as wrong
+                        wrongAnswers++;
                     }
                 } else {
-                    // Subjective questions - save the answer
                     const subjectiveAnswer = document.getElementById(`ans${i}`)?.value || '';
                     answers[`q${i}`] = {
                         type: 'subjective',
@@ -295,7 +448,6 @@
                         answer: subjectiveAnswer,
                         needsGrading: true
                     };
-                    // Subjective questions - count as right by default (teacher will grade manually)
                     rightAnswers++;
                 }
             });
@@ -309,13 +461,13 @@
                 totalQuestions: totalQuestions,
                 rightAnswers: rightAnswers,
                 wrongAnswers: wrongAnswers,
-                answers: answers, // Save all answers
+                answers: answers,
                 cheated: cheated,
                 time: new Date().toLocaleTimeString(),
                 submittedAt: new Date().toISOString()
             });
 
-            alert("Test Submitted!");
+            alert("Test Submitted Successfully! ✅");
             location.reload();
         };
     </script>
