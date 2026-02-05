@@ -6,620 +6,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Take Exam - SmartQuiz</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #3b82f6;
-            --secondary: #10b981;
-            --dark: #0f172a;
-            --dark-light: #1e293b;
-            --dark-lighter: #334155;
-            --gray: #64748b;
-            --light: #f1f5f9;
-            --white: #ffffff;
-            --error: #ef4444;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--dark);
-            color: var(--white);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        /* Join Exam Card */
-        .join-card {
-            max-width: 450px;
-            margin: 100px auto;
-            background: var(--dark-light);
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .join-card h1 {
-            font-size: 1.8rem;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .join-card>p {
-            text-align: center;
-            color: var(--gray);
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 14px;
-            background: var(--dark);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            color: var(--white);
-            font-size: 1rem;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
-        }
-
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            color: var(--gray);
-            text-decoration: none;
-        }
-
-        .error-message {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid var(--error);
-            color: var(--error);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        /* Exam Area */
-        .exam-container {
-            display: none;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .exam-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--dark-light);
-            padding: 20px 25px;
-            border-radius: 16px;
-            margin-bottom: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .exam-header .info h2 {
-            font-size: 1.3rem;
-            margin-bottom: 5px;
-        }
-
-        .exam-header .info p {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
-
-        .timer {
-            background: linear-gradient(135deg, var(--error), #f97316);
-            padding: 12px 25px;
-            border-radius: 10px;
-            font-size: 1.4rem;
+        /* Specific Exam Styles */
+        .timer-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: 50px;
             font-weight: 700;
-        }
-
-        .question-card {
-            background: var(--dark-light);
-            padding: 30px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-left: 5px solid var(--primary);
-        }
-
-        .question-card .number {
-            display: inline-block;
-            background: var(--primary);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-
-        .question-card .text {
             font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-
-        .options {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .option {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 15px;
-            padding: 15px;
-            background: var(--dark);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            gap: 8px;
         }
 
-        .option:hover {
-            border-color: var(--primary);
-            background: rgba(59, 130, 246, 0.1);
-        }
-
-        .option.selected {
-            border-color: var(--secondary);
-            background: rgba(16, 185, 129, 0.1);
-        }
-
-        .option input {
-            display: none;
-        }
-
-        .option .circle {
-            width: 24px;
-            height: 24px;
-            border: 2px solid var(--gray);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .option.selected .circle {
-            border-color: var(--secondary);
-            background: var(--secondary);
-        }
-
-        .option.selected .circle::after {
-            content: '✓';
-            color: white;
-            font-size: 0.8rem;
-        }
-
-        .option .label {
-            flex: 1;
-        }
-
-        .subjective-answer {
-            width: 100%;
-            min-height: 120px;
-            padding: 15px;
-            background: var(--dark);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            color: var(--white);
-            font-family: inherit;
-            font-size: 1rem;
-            resize: vertical;
-        }
-
-        .subjective-answer:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .submit-btn {
-            display: block;
-            width: 100%;
-            max-width: 300px;
-            margin: 30px auto;
-            padding: 16px;
-            background: linear-gradient(135deg, var(--secondary), #059669);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.4);
-        }
-
-        /* Cheat Overlay */
-        .cheat-overlay {
-            display: none;
+        .cheating-overlay {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(220, 38, 38, 0.98);
-            z-index: 99999;
-            justify-content: center;
-            align-items: center;
+            right: 0;
+            bottom: 0;
+            background: rgba(220, 38, 38, 0.95);
+            z-index: 9999;
+            display: none;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            padding: 20px;
+            color: white;
         }
 
-        .cheat-overlay .icon {
-            font-size: 5rem;
+        .cheating-overlay h1 {
+            font-size: 3rem;
             margin-bottom: 20px;
         }
 
-        .cheat-overlay h1 {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-
-        .cheat-overlay p {
-            font-size: 1.2rem;
-            max-width: 500px;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-
-        @media (max-width: 768px) {
-            .exam-header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
+        .cheating-overlay p {
+            font-size: 1.5rem;
+            max-width: 600px;
         }
     </style>
 </head>
 
-<body>
+<body oncontextmenu="return false">
 
-    <!-- Cheat Overlay -->
-    <div class="cheat-overlay" id="cheatOverlay">
-        <div class="icon">🚫</div>
-        <h1>EXAM BLOCKED!</h1>
-        <p>You switched tabs or minimized the window. This is considered cheating. Your exam has been automatically
-            submitted.</p>
-        <button class="btn" style="max-width: 200px;" onclick="location.href='dashboard.html'">Return to
-            Dashboard</button>
+    <!-- Cheating Overlay -->
+    <div class="cheating-overlay" id="cheatingOverlay">
+        <h1>⚠️ VIOLATION DETECTED</h1>
+        <p>Tab switching or window minimization is not allowed during the exam.</p>
+        <p style="margin-top:20px; font-weight:bold;">Submitting your exam automatically...</p>
     </div>
 
-    <!-- Join Exam Card -->
-    <div class="join-card" id="joinCard">
-        <h1>📝 Take Exam</h1>
-        <p>Enter your exam details to begin</p>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <a href="../index.html" class="logo">
+            <div class="logo-icon">📝</div>
+            <span>SmartQuiz</span>
+        </a>
 
-        <div class="error-message" id="errorMsg"></div>
-
-        <div class="form-group">
-            <label>Teacher ID</label>
-            <input type="text" id="teacherId" placeholder="Enter teacher's ID">
-        </div>
-
-        <div class="form-group">
-            <label>Your Roll Number</label>
-            <input type="text" id="rollNumber" placeholder="Enter your roll number">
-        </div>
-
-        <button class="btn" onclick="joinExam()">🚀 Start Exam</button>
-        <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
-    </div>
-
-    <!-- Exam Container -->
-    <div class="exam-container" id="examContainer">
-        <div class="exam-header">
-            <div class="info">
-                <h2 id="examTitle">📝 Online Examination</h2>
-                <p id="examInfo">Answer all questions carefully</p>
+        <div class="nav-menu">
+            <a href="dashboard.html" class="nav-item">
+                <span>📊</span> Dashboard
+            </a>
+            <div class="nav-item active" style="cursor:default">
+                <span>✏️</span> Exam in Progress
             </div>
-            <div class="timer" id="timer">10:00</div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 id="examTitle">Loading Exam...</h1>
+                <p>Do not switch tabs or close window</p>
+            </div>
+            <div class="timer-badge">
+                ⏳ <span id="timer">--:--</span>
+            </div>
         </div>
 
-        <div id="questionsArea"></div>
+        <form id="examForm">
+            <div class="card">
+                <div class="card-body">
+                    <div id="questionsContainer">
+                        <div style="text-align:center; padding:50px;">
+                            Loading Questions...
+                        </div>
+                    </div>
 
-        <button class="submit-btn" onclick="submitExam()">✅ Submit Exam</button>
-    </div>
+                    <div style="margin-top:30px; text-align:right;">
+                        <button type="submit" class="btn btn-primary btn-large">Submit Exam</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBOVvfW63xx10C4_l9obcQMC64cDFGndZ8",
-            authDomain: "smart-quiz-system-d59d9.firebaseapp.com",
-            databaseURL: "https://smart-quiz-system-d59d9-default-rtdb.firebaseio.com",
-            projectId: "smart-quiz-system-d59d9",
-            storageBucket: "smart-quiz-system-d59d9.firebasestorage.app",
-            messagingSenderId: "38603211706",
-            appId: "1:38603211706:web:57b1e7a3d48426544ad383"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-
-        let currentUser = null;
-        let examData = null;
-        let teacherId = '';
-        let rollNumber = '';
-        let timeLeft = 600;
-        let timerInterval = null;
-        let examStarted = false;
-        let examBlocked = false;
-        let cheated = false;
-
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                window.location.href = '../auth/login.html';
-                return;
-            }
-
-            const userSnap = await get(ref(db, 'users/' + user.uid));
-            currentUser = { ...user, ...userSnap.val() };
-
-            // Check for pre-filled data
-            const savedTeacher = sessionStorage.getItem('examTeacherId');
-            const savedRoll = sessionStorage.getItem('examRollNumber');
-
-            if (savedTeacher) document.getElementById('teacherId').value = savedTeacher;
-            if (savedRoll) document.getElementById('rollNumber').value = savedRoll;
-
-            sessionStorage.removeItem('examTeacherId');
-            sessionStorage.removeItem('examRollNumber');
-        });
-
-        window.joinExam = async function () {
-            teacherId = document.getElementById('teacherId').value.trim().toLowerCase();
-            rollNumber = document.getElementById('rollNumber').value.trim();
-
-            if (!teacherId || !rollNumber) {
-                showError('Please enter both Teacher ID and Roll Number!');
-                return;
-            }
-
-            try {
-                const examSnap = await get(ref(db, 'exams/' + teacherId));
-
-                if (!examSnap.exists()) {
-                    showError('No exam found for this Teacher ID!');
-                    return;
-                }
-
-                examData = examSnap.val();
-
-                if (!examData.allowedList.includes(rollNumber)) {
-                    showError('Your roll number is not authorized for this exam!');
-                    return;
-                }
-
-                // Log student login
-                await set(ref(db, `student-logins/${teacherId}/${rollNumber}`), {
-                    name: currentUser.displayName || rollNumber,
-                    email: currentUser.email,
-                    rollNumber: rollNumber,
-                    loginTime: new Date().toISOString(),
-                    loginDate: new Date().toLocaleDateString(),
-                    loginTimeFormatted: new Date().toLocaleString()
-                });
-
-                // Start exam
-                startExam();
-
-            } catch (error) {
-                showError('Error: ' + error.message);
-            }
-        };
-
-        function startExam() {
-            document.getElementById('joinCard').style.display = 'none';
-            document.getElementById('examContainer').style.display = 'block';
-
-            document.getElementById('examInfo').textContent = `${examData.questions.length} questions • Roll: ${rollNumber}`;
-
-            loadQuestions();
-            startTimer();
-            enableCheatingDetection();
-            examStarted = true;
-        }
-
-        function loadQuestions() {
-            const area = document.getElementById('questionsArea');
-
-            area.innerHTML = examData.questions.map((q, i) => {
-                let html = `
-            <div class="question-card">
-                <span class="number">Question ${i + 1}</span>
-                <p class="text">${q.text}</p>
-        `;
-
-                if (q.type === 'mcq') {
-                    html += '<div class="options">';
-                    for (let key in q.options) {
-                        html += `
-                    <label class="option" onclick="selectOption(this, ${i}, '${key}')">
-                        <input type="radio" name="q${i}" value="${key}">
-                        <span class="circle"></span>
-                        <span class="label"><strong>${key}:</strong> ${q.options[key]}</span>
-                    </label>
-                `;
-                    }
-                    html += '</div>';
-                } else {
-                    html += `<textarea class="subjective-answer" id="ans${i}" placeholder="Write your answer here..."></textarea>`;
-                }
-
-                html += '</div>';
-                return html;
-            }).join('');
-        }
-
-        window.selectOption = function (element, qIndex, value) {
-            // Remove selected from siblings
-            element.parentElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-            element.classList.add('selected');
-            element.querySelector('input').checked = true;
-        };
-
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                let mins = Math.floor(timeLeft / 60);
-                let secs = timeLeft % 60;
-                document.getElementById('timer').textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    submitExam();
-                }
-            }, 1000);
-        }
-
-        function enableCheatingDetection() {
-            document.addEventListener('visibilitychange', handleCheat);
-            window.addEventListener('blur', handleCheat);
-        }
-
-        function handleCheat() {
-            if (!examStarted || examBlocked) return;
-            if (document.hidden || document.visibilityState === 'hidden') {
-                blockExam();
-            }
-        }
-
-        async function blockExam() {
-            if (examBlocked) return;
-            examBlocked = true;
-            cheated = true;
-
-            if (timerInterval) clearInterval(timerInterval);
-
-            document.getElementById('cheatOverlay').style.display = 'flex';
-            document.getElementById('examContainer').style.display = 'none';
-
-            await submitExamData(true);
-        }
-
-        window.submitExam = async function () {
-            if (examBlocked) return;
-            if (!confirm('Are you sure you want to submit?')) return;
-
-            examBlocked = true;
-            if (timerInterval) clearInterval(timerInterval);
-
-            await submitExamData(false);
-
-            alert('✅ Exam submitted successfully!');
-            window.location.href = 'dashboard.html';
-        };
-
-        async function submitExamData(wasCheating) {
-            let rightAnswers = 0;
-            let wrongAnswers = 0;
-            const answers = {};
-
-            examData.questions.forEach((q, i) => {
-                if (q.type === 'mcq') {
-                    const selected = document.querySelector(`input[name="q${i}"]:checked`)?.value;
-                    answers[`q${i}`] = {
-                        type: 'mcq',
-                        question: q.text,
-                        selected: selected || 'Not Answered',
-                        correct: q.correct,
-                        isCorrect: selected === q.correct
-                    };
-
-                    if (selected === q.correct) rightAnswers++;
-                    else wrongAnswers++;
-                } else {
-                    const answer = document.getElementById(`ans${i}`)?.value || '';
-                    answers[`q${i}`] = {
-                        type: 'subjective',
-                        question: q.text,
-                        answer: answer,
-                        needsGrading: true
-                    };
-                    rightAnswers++;
-                }
-            });
-
-            const score = Math.round((rightAnswers / examData.questions.length) * 100);
-
-            await set(ref(db, `exams/${teacherId}/submissions/${rollNumber}`), {
-                name: currentUser.displayName || rollNumber,
-                rollNumber: rollNumber,
-                score: score,
-                totalQuestions: examData.questions.length,
-                rightAnswers: rightAnswers,
-                wrongAnswers: wrongAnswers,
-                answers: answers,
-                cheated: wasCheating,
-                cheatingReason: wasCheating ? 'Tab switch detected' : null,
-                time: new Date().toLocaleTimeString(),
-                submittedAt: new Date().toISOString(),
-                autoSubmitted: wasCheating
-            });
-
-            // Update student stats
-            const studentRef = ref(db, `students/${currentUser.uid}`);
-            const studentSnap = await get(studentRef);
-            const examsTaken = (studentSnap.exists() ? studentSnap.val().examsTaken : 0) + 1;
-            await update(studentRef, { examsTaken });
-        }
-
-        function showError(msg) {
-            const el = document.getElementById('errorMsg');
-            el.textContent = msg;
-            el.style.display = 'block';
-        }
-    </script>
-
+    <script type="module" src="../assets/js/student/take-exam.js"></script>
 </body>
 
 </html>

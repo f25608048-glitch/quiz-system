@@ -6,395 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Exam - SmartQuiz</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #3b82f6;
-            --secondary: #10b981;
-            --dark: #0f172a;
-            --dark-light: #1e293b;
-            --dark-lighter: #334155;
-            --gray: #64748b;
-            --light: #f1f5f9;
-            --white: #ffffff;
-            --error: #ef4444;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--dark);
-            color: var(--white);
-            min-height: 100vh;
-        }
-
-        /* Sidebar - Same as dashboard */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 260px;
-            height: 100vh;
-            background: var(--dark-light);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--white);
-            text-decoration: none;
-            margin-bottom: 40px;
-        }
-
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        .nav-menu {
-            flex: 1;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
-            color: var(--gray);
-            text-decoration: none;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--white);
-        }
-
-        .nav-item.active {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-        }
-
-        .nav-item .icon {
-            font-size: 1.2rem;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 15px;
-            background: var(--dark);
-            border-radius: 12px;
-            margin-top: auto;
-        }
-
-        .user-profile img {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .user-info {
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .user-info .name {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .user-info .role {
-            color: var(--gray);
-            font-size: 0.8rem;
-        }
-
-        .logout-btn {
-            background: none;
-            border: none;
-            color: var(--gray);
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
-        .logout-btn:hover {
-            color: var(--error);
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 260px;
-            padding: 30px;
-            min-height: 100vh;
-        }
-
-        .page-header {
-            margin-bottom: 30px;
-        }
-
-        .page-header h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-        }
-
-        .page-header p {
-            color: var(--gray);
-            margin-top: 5px;
-        }
-
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-        }
-
-        .card {
-            background: var(--dark-light);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow: hidden;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 25px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .card-header h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .card-body {
-            padding: 20px 25px;
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .form-group label {
-            display: block;
-            color: var(--light);
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 12px 14px;
-            background: var(--dark);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            color: var(--white);
-            font-size: 0.95rem;
-            font-family: inherit;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .form-group textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-
-        .mcq-options {
-            background: var(--dark);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 10px;
-            display: none;
-        }
-
-        .mcq-options.show {
-            display: block;
-        }
-
-        .option-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            align-items: center;
-        }
-
-        .option-row .label {
-            width: 30px;
-            height: 30px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-
-        .option-row input {
-            flex: 1;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-secondary {
-            background: var(--secondary);
-            color: var(--white);
-        }
-
-        .btn-block {
-            width: 100%;
-            justify-content: center;
-        }
-
-        /* Questions List */
-        .question-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 15px;
-            background: var(--dark);
-            border-radius: 10px;
-            margin-bottom: 10px;
-            border-left: 4px solid var(--secondary);
-        }
-
-        .question-item .number {
-            width: 30px;
-            height: 30px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-
-        .question-item .text {
-            flex: 1;
-            font-size: 0.9rem;
-        }
-
-        .question-item .type {
-            font-size: 0.75rem;
-            padding: 4px 10px;
-            background: var(--dark-lighter);
-            border-radius: 20px;
-            color: var(--gray);
-        }
-
-        .question-item .delete-btn {
-            background: none;
-            border: none;
-            color: var(--gray);
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .question-item .delete-btn:hover {
-            color: var(--error);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: var(--gray);
-        }
-
-        .empty-state .icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
-
-        .success-message {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid var(--secondary);
-            color: var(--secondary);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        @media (max-width: 1200px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 70px;
-                padding: 15px;
-            }
-
-            .sidebar .logo span,
-            .sidebar .nav-item span,
-            .sidebar .user-info {
-                display: none;
-            }
-
-            .main-content {
-                margin-left: 70px;
-                padding: 20px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
 </head>
 
 <body>
@@ -406,313 +19,138 @@
             <span>SmartQuiz</span>
         </a>
 
-        <nav class="nav-menu">
+        <div class="nav-menu">
             <a href="dashboard.html" class="nav-item">
-                <span class="icon">📊</span>
-                <span>Dashboard</span>
+                <span>📊</span> Dashboard
             </a>
             <a href="create-exam.html" class="nav-item active">
-                <span class="icon">➕</span>
-                <span>Create Exam</span>
+                <span>➕</span> Create Exam
             </a>
             <a href="results.html" class="nav-item">
-                <span class="icon">📋</span>
-                <span>All Results</span>
+                <span>📈</span> Results
             </a>
             <a href="profile.html" class="nav-item">
-                <span class="icon">👤</span>
-                <span>Profile</span>
+                <span>👤</span> Profile
             </a>
-        </nav>
-
-        <div class="user-profile">
-            <img id="userPhoto" src="https://ui-avatars.com/api/?name=T&background=3b82f6&color=fff" alt="Profile">
-            <div class="user-info">
-                <div class="name" id="userName">Teacher</div>
-                <div class="role">Teacher</div>
-            </div>
-            <button class="logout-btn" onclick="logout()" title="Logout">🚪</button>
         </div>
     </aside>
 
     <!-- Main Content -->
     <main class="main-content">
         <div class="page-header">
-            <h1>Create New Exam ✍️</h1>
-            <p>Set up your exam with questions and allowed students</p>
+            <div>
+                <h1>Create New Exam</h1>
+                <p>Set up questions and rules for the examination</p>
+            </div>
         </div>
 
-        <div class="success-message" id="successMsg">
-            ✅ Exam published successfully! Students can now join using your Teacher ID.
-        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
 
-        <div class="content-grid">
-            <!-- Add Questions -->
-            <div class="card">
+            <!-- Exam Details Form -->
+            <form id="createExamForm">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3>Exam Details</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Exam Title</label>
+                            <input type="text" id="examTitle" required placeholder="e.g. Mid-Term Physics">
+                        </div>
+                        <div class="form-group">
+                            <label>Duration (Minutes)</label>
+                            <input type="number" id="duration" required placeholder="60">
+                        </div>
+                        <div class="form-group">
+                            <label>Start Time</label>
+                            <input type="datetime-local" id="startTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Allowed Roll Numbers (Optional)</label>
+                            <input type="text" id="allowedRolls" placeholder="e.g. 101, 102, 103 (Leave empty for all)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Question List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Questions Added</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="questionsList">
+                            <p style="color:var(--gray); text-align:center;">No questions added yet</p>
+                        </div>
+                        <div class="mt-4 text-center">
+                            <button type="submit" class="btn btn-primary btn-large">🚀 Publish Exam</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Question Builder -->
+            <div class="card" style="height: fit-content;">
                 <div class="card-header">
-                    <h2>📝 Add Questions</h2>
+                    <h3>Add Question</h3>
                 </div>
                 <div class="card-body">
                     <div class="form-group">
                         <label>Question Type</label>
-                        <select id="qType" onchange="toggleMCQ()">
-                            <option value="subjective">Subjective (Written Answer)</option>
-                            <option value="mcq">MCQ (Multiple Choice)</option>
+                        <select id="qType">
+                            <option value="mcq">Multiple Choice</option>
+                            <option value="subjective">Subjective (Text)</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label>Question Text</label>
-                        <textarea id="qText" placeholder="Enter your question here..."></textarea>
+                        <textarea id="qText" rows="3"
+                            style="width:100%; background:var(--dark-light); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px; border-radius:8px;"
+                            placeholder="Type question here..."></textarea>
                     </div>
 
-                    <div class="mcq-options" id="mcqOptions">
-                        <div class="option-row">
-                            <span class="label">A</span>
-                            <input type="text" id="optA" placeholder="Option A">
+                    <div class="form-group">
+                        <label>Marks</label>
+                        <input type="number" id="qMarks" value="1" min="1">
+                    </div>
+
+                    <div id="mcqOptions">
+                        <div class="form-group">
+                            <label>Option 1</label>
+                            <input type="text" id="opt1">
                         </div>
-                        <div class="option-row">
-                            <span class="label">B</span>
-                            <input type="text" id="optB" placeholder="Option B">
+                        <div class="form-group">
+                            <label>Option 2</label>
+                            <input type="text" id="opt2">
                         </div>
-                        <div class="option-row">
-                            <span class="label">C</span>
-                            <input type="text" id="optC" placeholder="Option C">
+                        <div class="form-group">
+                            <label>Option 3</label>
+                            <input type="text" id="opt3">
                         </div>
-                        <div class="option-row">
-                            <span class="label">D</span>
-                            <input type="text" id="optD" placeholder="Option D">
+                        <div class="form-group">
+                            <label>Option 4</label>
+                            <input type="text" id="opt4">
                         </div>
-                        <div class="form-group" style="margin-top: 15px; margin-bottom: 0;">
-                            <label>Correct Answer</label>
+                        <div class="form-group">
+                            <label>Correct Option</label>
                             <select id="correctOpt">
-                                <option value="A">A is correct</option>
-                                <option value="B">B is correct</option>
-                                <option value="C">C is correct</option>
-                                <option value="D">D is correct</option>
+                                <option value="1">Option 1</option>
+                                <option value="2">Option 2</option>
+                                <option value="3">Option 3</option>
+                                <option value="4">Option 4</option>
                             </select>
                         </div>
                     </div>
 
-                    <button class="btn btn-primary btn-block" onclick="addQuestion()" style="margin-top: 20px;">
-                        ➕ Add Question
-                    </button>
+                    <button type="button" id="addQuestionBtn" class="btn btn-outline" style="width:100%">+ Add
+                        Question</button>
                 </div>
             </div>
 
-            <!-- Exam Settings & Preview -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>⚙️ Exam Settings</h2>
-                </div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label>Allowed Roll Numbers</label>
-                        <textarea id="rollList"
-                            placeholder="Enter roll numbers separated by commas (e.g. 101, 102, 103)"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Your Teacher ID</label>
-                        <input type="text" id="teacherId" readonly style="background: var(--dark-lighter);">
-                        <small style="color: var(--gray); font-size: 0.8rem;">Students will use this ID to join your
-                            exam</small>
-                    </div>
-
-                    <button class="btn btn-secondary btn-block" onclick="publishExam()" style="margin-top: 20px;">
-                        🚀 Publish Exam
-                    </button>
-                </div>
-            </div>
-
-            <!-- Questions Preview -->
-            <div class="card" style="grid-column: 1 / -1;">
-                <div class="card-header">
-                    <h2>📋 Questions Preview (<span id="qCount">0</span>)</h2>
-                    <button class="btn" style="background: var(--error); color: white; padding: 8px 16px;"
-                        onclick="clearAll()">
-                        🗑️ Clear All
-                    </button>
-                </div>
-                <div class="card-body" id="questionsList">
-                    <div class="empty-state">
-                        <div class="icon">📭</div>
-                        <p>No questions added yet. Add some questions above!</p>
-                    </div>
-                </div>
-            </div>
         </div>
     </main>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBOVvfW63xx10C4_l9obcQMC64cDFGndZ8",
-            authDomain: "smart-quiz-system-d59d9.firebaseapp.com",
-            databaseURL: "https://smart-quiz-system-d59d9-default-rtdb.firebaseio.com",
-            projectId: "smart-quiz-system-d59d9",
-            storageBucket: "smart-quiz-system-d59d9.firebasestorage.app",
-            messagingSenderId: "38603211706",
-            appId: "1:38603211706:web:57b1e7a3d48426544ad383"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-
-        let currentUser = null;
-        let questions = [];
-
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                window.location.href = '../auth/login.html';
-                return;
-            }
-
-            const userSnap = await get(ref(db, 'users/' + user.uid));
-            if (!userSnap.exists() || userSnap.val().role !== 'teacher') {
-                window.location.href = '../student/dashboard.html';
-                return;
-            }
-
-            currentUser = { ...user, ...userSnap.val() };
-            initPage();
-        });
-
-        function initPage() {
-            document.getElementById('userName').textContent = currentUser.displayName || 'Teacher';
-            document.getElementById('teacherId').value = currentUser.uid;
-
-            if (currentUser.photoURL) {
-                document.getElementById('userPhoto').src = currentUser.photoURL;
-            }
-        }
-
-        window.toggleMCQ = function () {
-            const type = document.getElementById('qType').value;
-            document.getElementById('mcqOptions').classList.toggle('show', type === 'mcq');
-        };
-
-        window.addQuestion = function () {
-            const type = document.getElementById('qType').value;
-            const text = document.getElementById('qText').value.trim();
-
-            if (!text) {
-                alert('Please enter question text!');
-                return;
-            }
-
-            let question = { type, text };
-
-            if (type === 'mcq') {
-                const optA = document.getElementById('optA').value.trim();
-                const optB = document.getElementById('optB').value.trim();
-                const optC = document.getElementById('optC').value.trim();
-                const optD = document.getElementById('optD').value.trim();
-
-                if (!optA || !optB || !optC || !optD) {
-                    alert('Please fill all MCQ options!');
-                    return;
-                }
-
-                question.options = { A: optA, B: optB, C: optC, D: optD };
-                question.correct = document.getElementById('correctOpt').value;
-            }
-
-            questions.push(question);
-            renderQuestions();
-
-            // Clear form
-            document.getElementById('qText').value = '';
-            document.getElementById('optA').value = '';
-            document.getElementById('optB').value = '';
-            document.getElementById('optC').value = '';
-            document.getElementById('optD').value = '';
-        };
-
-        window.renderQuestions = function () {
-            const list = document.getElementById('questionsList');
-            document.getElementById('qCount').textContent = questions.length;
-
-            if (questions.length === 0) {
-                list.innerHTML = `
-            <div class="empty-state">
-                <div class="icon">📭</div>
-                <p>No questions added yet. Add some questions above!</p>
-            </div>`;
-                return;
-            }
-
-            list.innerHTML = questions.map((q, i) => `
-        <div class="question-item">
-            <span class="number">${i + 1}</span>
-            <span class="text">${q.text}</span>
-            <span class="type">${q.type.toUpperCase()}</span>
-            <button class="delete-btn" onclick="deleteQuestion(${i})">🗑️</button>
-        </div>
-    `).join('');
-        };
-
-        window.deleteQuestion = function (index) {
-            questions.splice(index, 1);
-            renderQuestions();
-        };
-
-        window.clearAll = function () {
-            if (questions.length === 0) return;
-            if (confirm('Are you sure you want to delete all questions?')) {
-                questions = [];
-                renderQuestions();
-            }
-        };
-
-        window.publishExam = async function () {
-            if (questions.length === 0) {
-                alert('Please add at least one question!');
-                return;
-            }
-
-            const rollList = document.getElementById('rollList').value
-                .split(',')
-                .map(r => r.trim())
-                .filter(r => r);
-
-            if (rollList.length === 0) {
-                alert('Please enter allowed roll numbers!');
-                return;
-            }
-
-            try {
-                await set(ref(db, 'exams/' + currentUser.uid), {
-                    questions: questions,
-                    allowedList: rollList,
-                    publishedAt: Date.now(),
-                    teacherName: currentUser.displayName
-                });
-
-                document.getElementById('successMsg').style.display = 'block';
-                questions = [];
-                renderQuestions();
-                document.getElementById('rollList').value = '';
-
-                setTimeout(() => {
-                    document.getElementById('successMsg').style.display = 'none';
-                }, 5000);
-
-            } catch (error) {
-                alert('Error publishing exam: ' + error.message);
-            }
-        };
-
-        window.logout = async function () {
-            await signOut(auth);
-            window.location.href = '../auth/login.html';
-        };
-    </script>
-
+    <script type="module" src="../assets/js/teacher/create-exam.js"></script>
 </body>
 
 </html>

@@ -4,529 +4,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Results - SmartQuiz</title>
+    <title>Exam Results - SmartQuiz</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <!-- ExcelJS Library for Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #3b82f6;
-            --secondary: #10b981;
-            --dark: #0f172a;
-            --dark-light: #1e293b;
-            --gray: #64748b;
-            --light: #f1f5f9;
-            --white: #ffffff;
-            --error: #ef4444;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--dark);
-            color: var(--white);
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 260px;
-            height: 100vh;
-            background: var(--dark-light);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--white);
-            text-decoration: none;
-            margin-bottom: 40px;
-        }
-
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .nav-menu {
-            flex: 1;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
-            color: var(--gray);
-            text-decoration: none;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--white);
-        }
-
-        .nav-item.active {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 15px;
-            background: var(--dark);
-            border-radius: 12px;
-            margin-top: auto;
-        }
-
-        .user-profile img {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-        }
-
-        .user-info .name {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .user-info .role {
-            color: var(--gray);
-            font-size: 0.8rem;
-        }
-
-        .logout-btn {
-            background: none;
-            border: none;
-            color: var(--gray);
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
-        .main-content {
-            margin-left: 260px;
-            padding: 30px;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .page-header h1 {
-            font-size: 1.8rem;
-        }
-
-        .page-header p {
-            color: var(--gray);
-            margin-top: 5px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-        }
-
-        .card {
-            background: var(--dark-light);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 25px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .card-body {
-            padding: 20px 25px;
-        }
-
-        .search-box {
-            position: relative;
-            max-width: 400px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 12px 14px 12px 40px;
-            background: var(--dark);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            color: var(--white);
-        }
-
-        .search-box .icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        th {
-            color: var(--gray);
-            font-weight: 500;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-        }
-
-        .student-cell {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .avatar {
-            width: 40px;
-            height: 40px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .score {
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-
-        .score.pass {
-            color: var(--secondary);
-        }
-
-        .score.fail {
-            color: var(--error);
-        }
-
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .status-badge.pass {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--secondary);
-        }
-
-        .status-badge.fail {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--error);
-        }
-
-        .status-badge.cheated {
-            background: rgba(245, 158, 11, 0.2);
-            color: #f59e0b;
-        }
-
-        .action-btn {
-            padding: 8px 14px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px;
-            color: var(--gray);
-        }
-
-        .empty-state .icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 70px;
-                padding: 15px;
-            }
-
-            .sidebar .logo span,
-            .sidebar .nav-item span,
-            .sidebar .user-info {
-                display: none;
-            }
-
-            .main-content {
-                margin-left: 70px;
-                padding: 20px;
-            }
-        }
-    </style>
 </head>
 
 <body>
 
+    <!-- Sidebar -->
     <aside class="sidebar">
         <a href="../index.html" class="logo">
             <div class="logo-icon">📝</div>
             <span>SmartQuiz</span>
         </a>
 
-        <nav class="nav-menu">
-            <a href="dashboard.html" class="nav-item"><span class="icon">📊</span><span>Dashboard</span></a>
-            <a href="create-exam.html" class="nav-item"><span class="icon">➕</span><span>Create Exam</span></a>
-            <a href="results.html" class="nav-item active"><span class="icon">📋</span><span>All Results</span></a>
-            <a href="profile.html" class="nav-item"><span class="icon">👤</span><span>Profile</span></a>
-        </nav>
-
-        <div class="user-profile">
-            <img id="userPhoto" src="https://ui-avatars.com/api/?name=T&background=3b82f6&color=fff" alt="Profile">
-            <div class="user-info">
-                <div class="name" id="userName">Teacher</div>
-                <div class="role">Teacher</div>
-            </div>
-            <button class="logout-btn" onclick="logout()">🚪</button>
+        <div class="nav-menu">
+            <a href="dashboard.html" class="nav-item">
+                <span>📊</span> Dashboard
+            </a>
+            <a href="create-exam.html" class="nav-item">
+                <span>➕</span> Create Exam
+            </a>
+            <a href="results.html" class="nav-item active">
+                <span>📈</span> Results
+            </a>
+            <a href="profile.html" class="nav-item">
+                <span>👤</span> Profile
+            </a>
         </div>
     </aside>
 
+    <!-- Main Content -->
     <main class="main-content">
         <div class="page-header">
             <div>
-                <h1>📊 All Results</h1>
-                <p>View all student submissions</p>
+                <h1>Student Results</h1>
+                <p>View and manage marks from all examinations</p>
             </div>
-            <button class="btn btn-primary" onclick="exportToExcel()">📥 Export to Excel</button>
+            <button class="btn btn-primary" onclick="exportToExcel()">📥 Export Excel</button>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <div class="search-box">
-                    <span class="icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Search by name or roll number..."
-                        oninput="filterResults()">
-                </div>
-                <span id="totalCount">0 submissions</span>
+                <input type="text" id="searchInput" placeholder="Search student, exam or roll no..."
+                    style="padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:var(--dark); color:white; width:300px;">
             </div>
             <div class="card-body">
-                <table id="resultsTable">
+                <table style="width:100%; border-collapse:collapse; color:white;">
                     <thead>
-                        <tr>
-                            <th>Student</th>
-                            <th>Roll No</th>
-                            <th>Score</th>
-                            <th>Status</th>
-                            <th>Time</th>
-                            <th>Action</th>
+                        <tr style="text-align:left; border-bottom:2px solid rgba(255,255,255,0.1); color:var(--gray);">
+                            <th style="padding:15px;">Student</th>
+                            <th style="padding:15px;">Roll No</th>
+                            <th style="padding:15px;">Exam</th>
+                            <th style="padding:15px;">Score</th>
+                            <th style="padding:15px;">Date</th>
+                            <th style="padding:15px;">Cheated?</th>
+                            <th style="padding:15px;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="tableBody"></tbody>
+                    <tbody id="resultsBody">
+                        <!-- Rows rendered via JS -->
+                    </tbody>
                 </table>
-                <div class="empty-state" id="emptyState">
-                    <div class="icon">📭</div>
-                    <p>No submissions yet</p>
-                </div>
+                <div id="loading" style="text-align:center; padding:30px;">Loading results...</div>
             </div>
         </div>
     </main>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBOVvfW63xx10C4_l9obcQMC64cDFGndZ8",
-            authDomain: "smart-quiz-system-d59d9.firebaseapp.com",
-            databaseURL: "https://smart-quiz-system-d59d9-default-rtdb.firebaseio.com",
-            projectId: "smart-quiz-system-d59d9",
-            storageBucket: "smart-quiz-system-d59d9.firebasestorage.app",
-            messagingSenderId: "38603211706",
-            appId: "1:38603211706:web:57b1e7a3d48426544ad383"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-
-        let currentUser = null;
-        let allSubmissions = {};
-        let allLogins = {};
-
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) { window.location.href = '../auth/login.html'; return; }
-
-            const userSnap = await get(ref(db, 'users/' + user.uid));
-            if (!userSnap.exists() || userSnap.val().role !== 'teacher') {
-                window.location.href = '../student/dashboard.html'; return;
-            }
-
-            currentUser = { ...user, ...userSnap.val() };
-            document.getElementById('userName').textContent = currentUser.displayName || 'Teacher';
-
-            if (currentUser.photoURL) document.getElementById('userPhoto').src = currentUser.photoURL;
-
-            loadResults();
-        });
-
-        function loadResults() {
-            onValue(ref(db, 'exams/' + currentUser.uid + '/submissions'), (snap) => {
-                allSubmissions = snap.exists() ? snap.val() : {};
-                renderTable();
-            });
-
-            onValue(ref(db, 'student-logins/' + currentUser.uid), (snap) => {
-                allLogins = snap.exists() ? snap.val() : {};
-            });
-        }
-
-        window.renderTable = function (filter = '') {
-            const tbody = document.getElementById('tableBody');
-            const entries = Object.entries(allSubmissions);
-
-            let filtered = entries;
-            if (filter) {
-                filtered = entries.filter(([roll, s]) =>
-                    roll.toLowerCase().includes(filter) ||
-                    (s.name && s.name.toLowerCase().includes(filter))
-                );
-            }
-
-            document.getElementById('totalCount').textContent = `${filtered.length} submissions`;
-            document.getElementById('emptyState').style.display = filtered.length ? 'none' : 'block';
-            document.getElementById('resultsTable').style.display = filtered.length ? 'table' : 'none';
-
-            tbody.innerHTML = filtered.map(([roll, s]) => `
-        <tr>
-            <td>
-                <div class="student-cell">
-                    <div class="avatar">${(s.name || roll).charAt(0).toUpperCase()}</div>
-                    <span>${s.name || 'Unknown'}</span>
-                </div>
-            </td>
-            <td>${roll}</td>
-            <td><span class="score ${s.score >= 50 ? 'pass' : 'fail'}">${s.score}%</span></td>
-            <td>
-                ${s.cheated
-                    ? '<span class="status-badge cheated">⚠️ Cheated</span>'
-                    : `<span class="status-badge ${s.score >= 50 ? 'pass' : 'fail'}">${s.score >= 50 ? 'Pass' : 'Fail'}</span>`
-                }
-            </td>
-            <td>${s.time || '-'}</td>
-            <td><button class="action-btn" onclick="viewAnswers('${roll}')">View</button></td>
-        </tr>
-    `).join('');
-        };
-
-        window.filterResults = function () {
-            renderTable(document.getElementById('searchInput').value.toLowerCase());
-        };
-
-        window.viewAnswers = function (roll) {
-            const submission = allSubmissions[roll];
-            sessionStorage.setItem('viewSubmission', JSON.stringify({ roll, data: submission }));
-            window.location.href = 'view-answers.html';
-        };
-
-        window.exportToExcel = async function () {
-            if (Object.keys(allSubmissions).length === 0) {
-                alert('No data to export!');
-                return;
-            }
-
-            const workbook = new ExcelJS.Workbook();
-            const ws = workbook.addWorksheet('Results');
-
-            ws.columns = [
-                { header: 'Roll No', key: 'roll', width: 12 },
-                { header: 'Name', key: 'name', width: 25 },
-                { header: 'Score', key: 'score', width: 10 },
-                { header: 'Status', key: 'status', width: 12 },
-                { header: 'Cheated', key: 'cheated', width: 10 },
-                { header: 'Time', key: 'time', width: 12 }
-            ];
-
-            ws.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
-            ws.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '3b82f6' } };
-
-            Object.entries(allSubmissions).forEach(([roll, s]) => {
-                ws.addRow({
-                    roll,
-                    name: s.name || 'Unknown',
-                    score: s.score + '%',
-                    status: s.score >= 50 ? 'Pass' : 'Fail',
-                    cheated: s.cheated ? 'Yes' : 'No',
-                    time: s.time || '-'
-                });
-            });
-
-            const buffer = await workbook.xlsx.writeBuffer();
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `SmartQuiz_Results_${new Date().toISOString().split('T')[0]}.xlsx`;
-            a.click();
-        };
-
-        window.logout = async function () {
-            await signOut(auth);
-            window.location.href = '../auth/login.html';
-        };
-    </script>
-
+    <script type="module" src="../assets/js/teacher/results.js"></script>
 </body>
 
 </html>
