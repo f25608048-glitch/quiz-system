@@ -4,121 +4,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartQuiz - AI-Powered Secure Examination Platform</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/landing.css">
+    <title>Smart Quiz - Home</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f172a;
+            color: white;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .main-card {
+            background: #1e293b;
+            padding: 45px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            width: 380px;
+            border: 1px solid #334155;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            color: #f1f5f9;
+        }
+
+        p {
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+
+        .btn-box {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            color: white;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .teacher-btn {
+            background: #3b82f6;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .student-btn {
+            background: #10b981;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-5px);
+            filter: brightness(1.1);
+        }
+    </style>
 </head>
 
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar">
-        <a href="index.html" class="logo">
-            <div class="logo-icon">📝</div>
-            SmartQuiz
-        </a>
-        <div class="nav-buttons">
-            <a href="auth/login.html" class="btn btn-outline">Login</a>
-            <a href="auth/signup.html" class="btn btn-primary">Get Started</a>
-        </div>
-    </nav>
+    <div class="main-card">
+        <h1>Smart Quiz Portal</h1>
+        <p>AI-Powered Secure Examination</p>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <div class="hero-badge">🚀 AI-Powered Examination System</div>
-            <h1>Conduct <span>Secure Exams</span> Anytime, Anywhere</h1>
-            <p>Create, manage, and conduct online examinations with advanced anti-cheating detection. Perfect for
-                schools, colleges, and coaching centers.</p>
-            <div class="hero-buttons">
-                <a href="auth/signup.html?role=teacher" class="btn btn-primary btn-large btn-teacher">👨‍🏫 I'm a
-                    Teacher</a>
-                <a href="auth/signup.html?role=student" class="btn btn-primary btn-large btn-student">👨‍🎓 I'm a
-                    Student</a>
-            </div>
+        <div class="btn-box">
+            <a href="teacher.html" class="btn teacher-btn">👨‍🏫 Teacher Portal</a>
+            <a href="student.html" class="btn student-btn">👨‍🎓 Student Portal</a>
         </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features">
-        <div class="section-header">
-            <h2>Why Choose SmartQuiz?</h2>
-            <p>Powerful features designed for modern education</p>
-        </div>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🛡️</div>
-                <h3>Anti-Cheating System</h3>
-                <p>Automatic detection when students switch tabs or minimize windows. Exam instantly blocked if cheating
-                    detected.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h3>Real-Time Results</h3>
-                <p>Get instant results and detailed analytics as soon as students submit their exams.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3>Excel Export</h3>
-                <p>Download beautiful styled Excel reports with student records, scores, and pass/fail status.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📱</div>
-                <h3>Mobile Friendly</h3>
-                <p>Works perfectly on all devices - desktop, tablet, or mobile phone.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🔐</div>
-                <h3>Secure Authentication</h3>
-                <p>Email verification, Google sign-in, and password protection for all accounts.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📝</div>
-                <h3>MCQ & Subjective</h3>
-                <p>Create both multiple choice and subjective questions. Auto-grading for MCQs.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- How It Works -->
-    <section class="how-it-works">
-        <div class="section-header">
-            <h2>How It Works</h2>
-            <p>Get started in just 3 simple steps</p>
-        </div>
-        <div class="steps">
-            <div class="step">
-                <div class="step-number">1</div>
-                <h3>Create Account</h3>
-                <p>Sign up as a teacher or student with your email or Google account</p>
-            </div>
-            <div class="step">
-                <div class="step-number">2</div>
-                <h3>Setup Exam</h3>
-                <p>Teachers create questions and invite students using roll numbers</p>
-            </div>
-            <div class="step">
-                <div class="step-number">3</div>
-                <h3>Take Exam</h3>
-                <p>Students login, take the exam, and get instant results</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="cta">
-        <h2>Ready to Transform Your Exams?</h2>
-        <p>Join thousands of educators using SmartQuiz for secure online testing</p>
-        <div class="hero-buttons">
-            <a href="auth/signup.html" class="btn btn-primary btn-large">Create Free Account</a>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <p>© 2026 SmartQuiz. Built with ❤️ for better education.</p>
-    </footer>
+    </div>
 
 </body>
 
