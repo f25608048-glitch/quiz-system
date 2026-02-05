@@ -1,0 +1,239 @@
+/* Hero Section */
+.hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 5% 80px;
+    background:
+        radial-gradient(ellipse at top, rgba(59, 130, 246, 0.15), transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(16, 185, 129, 0.1), transparent 50%);
+}
+
+.hero-content {
+    max-width: 800px;
+}
+
+.hero-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 50px;
+    font-size: 0.85rem;
+    color: var(--primary);
+    margin-bottom: 30px;
+}
+
+.hero h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 25px;
+    background: linear-gradient(135deg, var(--white), var(--gray));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero h1 span {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    color: var(--gray);
+    margin-bottom: 40px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-teacher {
+    background: var(--primary);
+}
+
+.btn-student {
+    background: var(--secondary);
+}
+
+/* Features Section */
+.features {
+    padding: 100px 5%;
+    background: var(--dark-light);
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.section-header h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.section-header p {
+    color: var(--gray);
+    font-size: 1.1rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.feature-card {
+    background: var(--dark);
+    padding: 35px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+}
+
+.feature-card h3 {
+    font-size: 1.3rem;
+    margin-bottom: 12px;
+}
+
+.feature-card p {
+    color: var(--gray);
+    font-size: 0.95rem;
+}
+
+/* How It Works */
+.how-it-works {
+    padding: 100px 5%;
+}
+
+.steps {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.step {
+    text-align: center;
+    flex: 1;
+    min-width: 200px;
+    max-width: 280px;
+}
+
+.step-number {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 auto 20px;
+}
+
+.step h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.step p {
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+/* CTA Section */
+.cta {
+    padding: 100px 5%;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+}
+
+.cta h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.cta p {
+    color: var(--gray);
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+}
+
+/* Footer */
+.footer {
+    padding: 40px 5%;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer p {
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+/* Supplemental Responsive Styles */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2.2rem;
+    }
+
+    .navbar {
+        padding: 15px 5%;
+    }
+
+    .nav-buttons {
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        font-size: 0.85rem;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn-large {
+        width: 100%;
+        max-width: 280px;
+    }
+}
