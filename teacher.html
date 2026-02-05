@@ -1,215 +1,688 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Teacher Portal - Full Options</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
-        #authScreen { background: #1e293b; padding: 40px; border-radius: 15px; width: 320px; text-align: center; }
-        .container { max-width: 1100px; margin: 20px; display: none; gap: 20px; width: 95%; flex-wrap: wrap; align-items: flex-start; }
-        .box { background: #1e293b; padding: 25px; border-radius: 12px; flex: 1; min-width: 320px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; background: #f1f5f9; color: #0f172a; }
-        button { background: #3b82f6; color: white; border: none; padding: 14px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
-        .q-item { background: #0f172a; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #10b981; font-size: 0.9rem; }
-        .mcq-box { background: #334155; padding: 10px; border-radius: 8px; margin-top: 10px; display: none; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f172a;
+            color: white;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #authScreen {
+            background: #1e293b;
+            padding: 40px;
+            border-radius: 15px;
+            width: 320px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 20px;
+            display: none;
+            gap: 20px;
+            width: 95%;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .box {
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 12px;
+            flex: 1;
+            min-width: 320px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border: none;
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .q-item {
+            background: #0f172a;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 4px solid #10b981;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mcq-box {
+            background: #334155;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .login-item {
+            background: #0f172a;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 5px;
+            border-left: 4px solid #8b5cf6;
+            font-size: 0.85rem;
+        }
+
+        .view-btn {
+            background: #8b5cf6;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .view-btn:hover {
+            background: #7c3aed;
+        }
+    </style>
+    <!-- SheetJS Library for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- ExcelJS Library for better styling support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+</head>
+
+<body>
+
+    <div id="authScreen">
+        <h2 id="authTitle">Teacher Access</h2>
+        <input type="email" id="tEmail" placeholder="Gmail Address">
+        <input type="text" id="tUser" placeholder="Username (Unique ID)">
+        <input type="password" id="tPass" placeholder="Password">
+        <button onclick="handleAuth()" id="authBtn">Login / Sign Up</button>
+    </div>
+
+    <div class="container" id="dashboard">
+        <div class="box">
+            <h2 id="welcomeMsg">Welcome</h2>
+            <h3>1. Setup Exam</h3>
+            <textarea id="rollList" placeholder="Allowed Rolls (e.g. 101, 102)"></textarea>
+
+            <h3>2. Add Questions</h3>
+            <select id="qType" onchange="toggleFields()">
+                <option value="subjective">Subjective Question</option>
+                <option value="mcq">MCQ (Multiple Choice)</option>
+            </select>
+
+            <input type="text" id="qText" placeholder="Enter Question Statement">
+
+            <div id="mcqBox" class="mcq-box">
+                <input type="text" id="optA" placeholder="Option A">
+                <input type="text" id="optB" placeholder="Option B">
+                <input type="text" id="optC" placeholder="Option C">
+                <input type="text" id="optD" placeholder="Option D">
+                <select id="correctOpt">
+                    <option value="A">Correct: A</option>
+                    <option value="B">Correct: B</option>
+                    <option value="C">Correct: C</option>
+                    <option value="D">Correct: D</option>
+                </select>
+            </div>
+
+            <button onclick="addQuestion()" style="background:#6366f1;">Add to Paper ➕</button>
+            <div id="preview" style="margin-top:15px;"></div>
+            <button onclick="publish()" style="background:#10b981; margin-top:20px;">Publish Exam 🚀</button>
+        </div>
+
+        <div class="box" style="max-width: 350px;">
+            <h3>📊 Live Results</h3>
+            <input type="text" id="rollSearch" placeholder="🔍 Search Roll Number" oninput="filterResults()"
+                style="margin-bottom:10px;">
+
+            <div id="resList">No submissions yet.</div>
+            <button onclick="location.reload()" style="background:#ef4444; margin-top:30px;">Logout</button>
+        </div>
+
+        <!-- ===== NEW: Student Login Tracker Box ===== -->
+        <div class="box" style="width: 100%;">
+            <h3>👥 Student Records & Login Tracker</h3>
+            <button onclick="exportLoginsToExcel()" style="background:#10b981; margin-bottom:15px;">
+                📥 Export Complete Records to Excel
+            </button>
+            <div id="loginsList">No student logins yet.</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBOVvfW63xx10C4_l9obcQMC64cDFGndZ8",
+            authDomain: "smart-quiz-system-d59d9.firebaseapp.com",
+            databaseURL: "https://smart-quiz-system-d59d9-default-rtdb.firebaseio.com",
+            projectId: "smart-quiz-system-d59d9",
+            storageBucket: "smart-quiz-system-d59d9.firebasestorage.app",
+            messagingSenderId: "38603211706",
+            appId: "1:38603211706:web:57b1e7a3d48426544ad383"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentID = "";
+        let paper = [];
+        let allSubmissions = {};
+        let allLogins = {};
+
+        window.toggleFields = () => {
+            const type = document.getElementById('qType').value;
+            document.getElementById('mcqBox').style.display = (type === 'mcq') ? 'block' : 'none';
+        };
+
+        window.handleAuth = () => {
+            const email = document.getElementById('tEmail').value;
+            const pass = document.getElementById('tPass').value;
+            const user = document.getElementById('tUser').value.trim().toLowerCase();
+
+            signInWithEmailAndPassword(auth, email, pass)
+                .then(() => startDash(user))
+                .catch(() => {
+                    createUserWithEmailAndPassword(auth, email, pass)
+                        .then(() => {
+                            set(ref(db, 'teachers/' + user), { email });
+                            startDash(user);
+                        })
+                        .catch(e => alert(e.message));
+                });
+        };
+
+        function startDash(user) {
+            currentID = user;
+            document.getElementById('authScreen').style.display = "none";
+            document.getElementById('dashboard').style.display = "flex";
+            document.getElementById('welcomeMsg').innerText = "ID: " + user;
+
+            onValue(ref(db, 'exams/' + user + '/submissions'), (snap) => {
+                if (snap.exists()) {
+                    allSubmissions = snap.val();
+                    renderResults(allSubmissions);
+                } else {
+                    document.getElementById('resList').innerHTML = "No submissions yet.";
+                }
+            });
+
+            onValue(ref(db, 'student-logins/' + user), (snap) => {
+                if (snap.exists()) {
+                    allLogins = snap.val();
+                    renderLogins(allLogins);
+                } else {
+                    document.getElementById('loginsList').innerHTML = "No student logins yet.";
+                }
+            });
+        }
+
+        window.renderLogins = (data) => {
+            const list = document.getElementById('loginsList');
+            list.innerHTML = "";
+
+            const entries = Object.entries(data);
+
+            if (entries.length === 0) {
+                list.innerHTML = "No student logins yet.";
+                return;
+            }
+
+            entries.forEach(([roll, student]) => {
+                list.innerHTML += `
+                <div class='login-item'>
+                    <strong>${student.name}</strong> (${roll})<br>
+                    📧 ${student.email}<br>
+                    🕐 ${student.loginTimeFormatted}
+                </div>`;
+            });
+        };
+
+        window.exportLoginsToExcel = async () => {
+            if (Object.keys(allLogins).length === 0) {
+                alert("No student logins to export!");
+                return;
+            }
+
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Student Records');
+
+            worksheet.columns = [
+                { header: 'Roll Number', key: 'rollNumber', width: 15 },
+                { header: 'Student Name', key: 'name', width: 25 },
+                { header: 'Email', key: 'email', width: 35 },
+                { header: 'Login Date', key: 'loginDate', width: 15 },
+                { header: 'Login Time', key: 'loginTime', width: 20 },
+                { header: 'Total Questions', key: 'totalQuestions', width: 16 },
+                { header: 'Right', key: 'right', width: 10 },
+                { header: 'Wrong', key: 'wrong', width: 10 },
+                { header: 'Obtained Marks (%)', key: 'marks', width: 20 },
+                { header: 'Status', key: 'status', width: 12 }
+            ];
+
+            const headerRow = worksheet.getRow(1);
+            headerRow.height = 25;
+            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
+            headerRow.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF4472C4' }
+            };
+            headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+            headerRow.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+
+            Object.entries(allLogins).forEach(([roll, student]) => {
+                const submission = allSubmissions[roll];
+
+                let totalQ = '-';
+                let right = '-';
+                let wrong = '-';
+                let marks = '-';
+                let status = 'Not Submitted';
+
+                if (submission) {
+                    totalQ = submission.totalQuestions || '-';
+                    right = submission.rightAnswers || '-';
+                    wrong = submission.wrongAnswers || '-';
+                    marks = submission.score || 0;
+                    status = marks >= 50 ? 'P' : 'F';
+                }
+
+                const row = worksheet.addRow({
+                    rollNumber: roll,
+                    name: student.name,
+                    email: student.email,
+                    loginDate: student.loginDate,
+                    loginTime: student.loginTimeFormatted,
+                    totalQuestions: totalQ,
+                    right: right,
+                    wrong: wrong,
+                    marks: marks,
+                    status: status
+                });
+
+                const isFailing = (typeof marks === 'number' && marks < 50);
+
+                row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                        left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                        bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                        right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
+                    };
+
+                    if (isFailing) {
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FFFFCCCC' }
+                        };
+                        cell.font = { color: { argb: 'FFC00000' }, bold: true };
+                    } else {
+                        if (row.number % 2 === 0) {
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFF2F2F2' }
+                            };
+                        }
+                    }
+
+                    if (colNumber === 10) {
+                        if (cell.value === 'F') {
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFFF0000' }
+                            };
+                            cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+                        } else if (cell.value === 'P') {
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FF00B050' }
+                            };
+                            cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+                        }
+                    }
+                });
+            });
+
+            const filename = `Student_Records_${currentID}_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = filename;
+            anchor.click();
+            window.URL.revokeObjectURL(url);
+
+            alert(`✅ Styled Excel file downloaded: ${filename}`);
+        };
+
+        window.renderResults = (data) => {
+            const list = document.getElementById('resList');
+            list.innerHTML = "";
+
+            const entries = Object.entries(data);
+
+            if (entries.length === 0) {
+                list.innerHTML = "No matching results.";
+                return;
+            }
+
+            entries.forEach(([roll, s]) => {
+                list.innerHTML += `
+                <div class='q-item'>
+                    <span>${roll}: ${s.score}% ${s.cheated ? '⚠️' : '✅'}</span>
+                    <button class="view-btn" onclick="viewStudentAnswers('${roll}')">📄 View</button>
+                </div>`;
+            });
+        };
+
+        window.filterResults = () => {
+            const query = document.getElementById('rollSearch').value.toLowerCase();
+
+            if (!query) {
+                renderResults(allSubmissions);
+                return;
+            }
+
+            const filtered = Object.fromEntries(
+                Object.entries(allSubmissions).filter(([roll]) =>
+                    roll.toLowerCase().includes(query)
+                )
+            );
+
+            renderResults(filtered);
+        };
+
+        window.viewStudentAnswers = (rollNumber) => {
+            const submission = allSubmissions[rollNumber];
+
+            if (!submission || !submission.answers) {
+                alert("No answers found for this student!");
+                return;
+            }
+
+            let htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Answer Sheet - ${submission.name} (${rollNumber})</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+        }
+        .info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .info-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .info-item strong {
+            color: #667eea;
+        }
+        .question-block {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .question-header {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        .mcq-answer {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .correct {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        .incorrect {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        .subjective-answer {
+            background: #fff9db;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border-left: 4px solid #ffc107;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .badge-correct {
+            background: #28a745;
+            color: white;
+        }
+        .badge-incorrect {
+            background: #dc3545;
+            color: white;
+        }
+        .badge-subjective {
+            background: #ffc107;
+            color: #333;
+        }
+        .print-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 20px 0;
+            display: block;
+            width: 200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .print-btn:hover {
+            background: #5568d3;
+        }
+        @media print {
+            .print-btn { display: none; }
+            body { background: white; }
+        }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h1>📋 Student Answer Sheet</h1>
+        <p>${submission.name} - Roll #${rollNumber}</p>
+    </div>
 
-<div id="authScreen">
-    <h2 id="authTitle">Teacher Access</h2>
-    <input type="email" id="tEmail" placeholder="Gmail Address">
-    <input type="text" id="tUser" placeholder="Username (Unique ID)">
-    <input type="password" id="tPass" placeholder="Password">
-    <button onclick="handleAuth()" id="authBtn">Login / Sign Up</button>
-</div>
-
-<div class="container" id="dashboard">
-    <div class="box">
-        <h2 id="welcomeMsg">Welcome</h2>
-        <h3>1. Setup Exam</h3>
-        <textarea id="rollList" placeholder="Allowed Rolls (e.g. 101, 102)"></textarea>
-        
-        <h3>2. Add Questions</h3>
-        <select id="qType" onchange="toggleFields()">
-            <option value="subjective">Subjective Question</option>
-            <option value="mcq">MCQ (Multiple Choice)</option>
-        </select>
-        
-        <input type="text" id="qText" placeholder="Enter Question Statement">
-        
-        <div id="mcqBox" class="mcq-box">
-            <input type="text" id="optA" placeholder="Option A">
-            <input type="text" id="optB" placeholder="Option B">
-            <input type="text" id="optC" placeholder="Option C">
-            <input type="text" id="optD" placeholder="Option D">
-            <select id="correctOpt">
-                <option value="A">Correct: A</option>
-                <option value="B">Correct: B</option>
-                <option value="C">Correct: C</option>
-                <option value="D">Correct: D</option>
-            </select>
+    <div class="info">
+        <div class="info-grid">
+            <div class="info-item">
+                <strong>Total Questions:</strong> ${submission.totalQuestions}
+            </div>
+            <div class="info-item">
+                <strong>Obtained Marks:</strong> ${submission.score}%
+            </div>
+            <div class="info-item">
+                <strong>Right Answers:</strong> ${submission.rightAnswers}
+            </div>
+            <div class="info-item">
+                <strong>Wrong Answers:</strong> ${submission.wrongAnswers}
+            </div>
+            <div class="info-item">
+                <strong>Submitted At:</strong> ${submission.time}
+            </div>
+            <div class="info-item">
+                <strong>Cheating Detected:</strong> ${submission.cheated ? '⚠️ Yes' : '✅ No'}
+            </div>
         </div>
-        
-        <button onclick="addQuestion()" style="background:#6366f1;">Add to Paper ➕</button>
-        <div id="preview" style="margin-top:15px;"></div>
-        <button onclick="publish()" style="background:#10b981; margin-top:20px;">Publish Exam 🚀</button>
     </div>
 
-    <div class="box" style="max-width: 350px;">
-        <h3>📊 Live Results</h3>
-        <input 
-            type="text" 
-            id="rollSearch" 
-            placeholder="🔍 Search Roll Number"
-            oninput="filterResults()"
-            style="margin-bottom:10px;"
-        >
+    <button class="print-btn" onclick="window.print()">🖨️ Print Answer Sheet</button>
+`;
 
-        <div id="resList">No submissions yet.</div>
-        <button onclick="location.reload()" style="background:#ef4444; margin-top:30px;">Logout</button>
-    </div>
-</div>
+            Object.entries(submission.answers).forEach(([qKey, answer]) => {
+                const qNumber = qKey.replace('q', '');
+                const qNum = parseInt(qNumber) + 1;
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+                htmlContent += `<div class="question-block">`;
+                htmlContent += `<div class="question-header">Question ${qNum}: ${answer.question}</div>`;
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBOVvfW63xx10C4_l9obcQMC64cDFGndZ8",
-        authDomain: "smart-quiz-system-d59d9.firebaseapp.com",
-        databaseURL: "https://smart-quiz-system-d59d9-default-rtdb.firebaseio.com",
-        projectId: "smart-quiz-system-d59d9",
-        storageBucket: "smart-quiz-system-d59d9.firebasestorage.app",
-        messagingSenderId: "38603211706",
-        appId: "1:38603211706:web:57b1e7a3d48426544ad383"
-    };
+                if (answer.type === 'mcq') {
+                    const answerClass = answer.isCorrect ? 'mcq-answer correct' : 'mcq-answer incorrect';
+                    const badgeClass = answer.isCorrect ? 'badge badge-correct' : 'badge badge-incorrect';
+                    const badgeText = answer.isCorrect ? '✓ Correct' : '✗ Incorrect';
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+                    htmlContent += `
+                    <div class="${answerClass}">
+                        <strong>Selected Answer:</strong> ${answer.selected}
+                        <span class="${badgeClass}">${badgeText}</span>
+                        <br><strong>Correct Answer:</strong> ${answer.correct}
+                    </div>
+                `;
+                } else {
+                    htmlContent += `
+                    <div class="subjective-answer">
+                        <strong>Student's Answer:</strong>
+                        <span class="badge badge-subjective">📝 Needs Grading</span>
+                        <div style="margin-top: 10px;">${answer.answer || '<em>No answer provided</em>'}</div>
+                    </div>
+                `;
+                }
 
-    let currentID = "";
-    let paper = [];
-
-    
-    let allSubmissions = {};
-
-    window.toggleFields = () => {
-        const type = document.getElementById('qType').value;
-        document.getElementById('mcqBox').style.display = (type === 'mcq') ? 'block' : 'none';
-    };
-
-    window.handleAuth = () => {
-        const email = document.getElementById('tEmail').value;
-        const pass = document.getElementById('tPass').value;
-        const user = document.getElementById('tUser').value.trim().toLowerCase();
-
-        signInWithEmailAndPassword(auth, email, pass)
-            .then(() => startDash(user))
-            .catch(() => {
-                createUserWithEmailAndPassword(auth, email, pass)
-                    .then(() => {
-                        set(ref(db, 'teachers/' + user), { email });
-                        startDash(user);
-                    })
-                    .catch(e => alert(e.message));
+                htmlContent += `</div>`;
             });
-    };
 
-    function startDash(user) {
-        currentID = user;
-        document.getElementById('authScreen').style.display = "none";
-        document.getElementById('dashboard').style.display = "flex";
-        document.getElementById('welcomeMsg').innerText = "ID: " + user;
-
-        
-        onValue(ref(db, 'exams/' + user + '/submissions'), (snap) => {
-            if(snap.exists()) {
-                allSubmissions = snap.val();
-                renderResults(allSubmissions);
-            } else {
-                document.getElementById('resList').innerHTML = "No submissions yet.";
-            }
-        });
-    }
-
-    
-    window.renderResults = (data) => {
-        const list = document.getElementById('resList');
-        list.innerHTML = "";
-
-        const entries = Object.entries(data);
-
-        if(entries.length === 0) {
-            list.innerHTML = "No matching results.";
-            return;
-        }
-
-        entries.forEach(([roll, s]) => {
-            list.innerHTML += `
-                <div class='q-item'>
-                    ${roll}: ${s.score}% ${s.cheated ? '⚠️' : '✅'}
-                </div>`;
-        });
-    };
-
-    window.filterResults = () => {
-        const query = document.getElementById('rollSearch').value.toLowerCase();
-
-        if(!query) {
-            renderResults(allSubmissions);
-            return;
-        }
-
-        const filtered = Object.fromEntries(
-            Object.entries(allSubmissions).filter(([roll]) =>
-                roll.toLowerCase().includes(query)
-            )
-        );
-
-        renderResults(filtered);
-    };
-
-    window.addQuestion = () => {
-        const type = document.getElementById('qType').value;
-        const text = document.getElementById('qText').value;
-        
-        if(!text) return alert("Sawal to likhein pehle!");
-
-        let qObj = { type, text };
-
-        if(type === 'mcq') {
-            qObj.options = {
-                A: document.getElementById('optA').value,
-                B: document.getElementById('optB').value,
-                C: document.getElementById('optC').value,
-                D: document.getElementById('optD').value
-            };
-            qObj.correct = document.getElementById('correctOpt').value;
-        }
-
-        paper.push(qObj);
-        document.getElementById('preview').innerHTML += `<div class='q-item'>${text} (${type})</div>`;
-        document.getElementById('qText').value = ""; 
-
-        if(type === 'mcq') {
-            optA.value = optB.value = optC.value = optD.value = "";
-        }
-    };
-
-    window.publish = () => {
-        const rolls = document.getElementById('rollList').value.split(',').map(r => r.trim());
-        if(paper.length === 0) return alert("Kam se kam aik sawal to dalein!");
-        
-        set(ref(db, 'exams/' + currentID), { 
-            questions: paper, 
-            allowedList: rolls,
-            publishedAt: Date.now()
-        }).then(() => alert("Exam is now LIVE! Students can join using your ID."));
-    };
-</script>
+            htmlContent += `
 </body>
-</html>
+</html>`;
 
+            const newWindow = window.open();
+            newWindow.document.write(htmlContent);
+            newWindow.document.close();
+        };
+
+        window.addQuestion = () => {
+            const type = document.getElementById('qType').value;
+            const text = document.getElementById('qText').value;
+
+            if (!text) return alert("Sawal to likhein pehle!");
+
+            let qObj = { type, text };
+
+            if (type === 'mcq') {
+                qObj.options = {
+                    A: document.getElementById('optA').value,
+                    B: document.getElementById('optB').value,
+                    C: document.getElementById('optC').value,
+                    D: document.getElementById('optD').value
+                };
+                qObj.correct = document.getElementById('correctOpt').value;
+            }
+
+            paper.push(qObj);
+            document.getElementById('preview').innerHTML += `<div class='q-item'>${text} (${type})</div>`;
+            document.getElementById('qText').value = "";
+
+            if (type === 'mcq') {
+                optA.value = optB.value = optC.value = optD.value = "";
+            }
+        };
+
+        window.publish = () => {
+            const rolls = document.getElementById('rollList').value.split(',').map(r => r.trim());
+            if (paper.length === 0) return alert("Kam se kam aik sawal to dalein!");
+
+            set(ref(db, 'exams/' + currentID), {
+                questions: paper,
+                allowedList: rolls,
+                publishedAt: Date.now()
+            }).then(() => alert("Exam is now LIVE! Students can join using your ID."));
+        };
+    </script>
+</body>
+
+</html>
