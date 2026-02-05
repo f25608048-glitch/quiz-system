@@ -200,7 +200,7 @@
         let currentID = "";
         let paper = [];
         let allSubmissions = {};
-        let allLogins = {}; // NEW: Store login data
+        let allLogins = {};
 
         window.toggleFields = () => {
             const type = document.getElementById('qType').value;
@@ -230,7 +230,6 @@
             document.getElementById('dashboard').style.display = "flex";
             document.getElementById('welcomeMsg').innerText = "ID: " + user;
 
-            // Listen for exam submissions
             onValue(ref(db, 'exams/' + user + '/submissions'), (snap) => {
                 if (snap.exists()) {
                     allSubmissions = snap.val();
@@ -240,7 +239,6 @@
                 }
             });
 
-            // ===== NEW: Listen for student logins =====
             onValue(ref(db, 'student-logins/' + user), (snap) => {
                 if (snap.exists()) {
                     allLogins = snap.val();
@@ -251,7 +249,6 @@
             });
         }
 
-        // ===== NEW: Render student logins =====
         window.renderLogins = (data) => {
             const list = document.getElementById('loginsList');
             list.innerHTML = "";
@@ -273,18 +270,15 @@
             });
         };
 
-        // ===== NEW: Export logins to Excel with ExcelJS =====
         window.exportLoginsToExcel = async () => {
             if (Object.keys(allLogins).length === 0) {
                 alert("No student logins to export!");
                 return;
             }
 
-            // Create a new workbook
             const workbook = new ExcelJS.Workbook();
             const worksheet = workbook.addWorksheet('Student Records');
 
-            // Define columns
             worksheet.columns = [
                 { header: 'Roll Number', key: 'rollNumber', width: 15 },
                 { header: 'Student Name', key: 'name', width: 25 },
@@ -298,7 +292,6 @@
                 { header: 'Status', key: 'status', width: 12 }
             ];
 
-            // Style the header row
             const headerRow = worksheet.getRow(1);
             headerRow.height = 25;
             headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
@@ -315,7 +308,6 @@
                 right: { style: 'thin' }
             };
 
-            // Add data rows
             Object.entries(allLogins).forEach(([roll, student]) => {
                 const submission = allSubmissions[roll];
 
@@ -346,11 +338,9 @@
                     status: status
                 });
 
-                // Apply styling to data row
                 const isFailing = (typeof marks === 'number' && marks < 50);
 
                 row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-                    // Base styling
                     cell.alignment = { vertical: 'middle', horizontal: 'center' };
                     cell.border = {
                         top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
@@ -359,39 +349,36 @@
                         right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
                     };
 
-                    // If student is failing, apply red to entire row
                     if (isFailing) {
                         cell.fill = {
                             type: 'pattern',
                             pattern: 'solid',
-                            fgColor: { argb: 'FFFFCCCC' } // Light red
+                            fgColor: { argb: 'FFFFCCCC' }
                         };
-                        cell.font = { color: { argb: 'FFC00000' }, bold: true }; // Dark red
+                        cell.font = { color: { argb: 'FFC00000' }, bold: true };
                     } else {
-                        // Alternate row colors
                         if (row.number % 2 === 0) {
                             cell.fill = {
                                 type: 'pattern',
                                 pattern: 'solid',
-                                fgColor: { argb: 'FFF2F2F2' } // Light gray
+                                fgColor: { argb: 'FFF2F2F2' }
                             };
                         }
                     }
 
-                    // Special styling for Status column (column 10)
                     if (colNumber === 10) {
                         if (cell.value === 'F') {
                             cell.fill = {
                                 type: 'pattern',
                                 pattern: 'solid',
-                                fgColor: { argb: 'FFFF0000' } // Bright red
+                                fgColor: { argb: 'FFFF0000' }
                             };
                             cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
                         } else if (cell.value === 'P') {
                             cell.fill = {
                                 type: 'pattern',
                                 pattern: 'solid',
-                                fgColor: { argb: 'FF00B050' } // Green
+                                fgColor: { argb: 'FF00B050' }
                             };
                             cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
                         }
@@ -399,10 +386,8 @@
                 });
             });
 
-            // Generate filename with current date
             const filename = `Student_Records_${currentID}_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-            // Write to browser
             const buffer = await workbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             const url = window.URL.createObjectURL(blob);
@@ -452,7 +437,6 @@
             renderResults(filtered);
         };
 
-        // ===== NEW: View Student Answers =====
         window.viewStudentAnswers = (rollNumber) => {
             const submission = allSubmissions[rollNumber];
 
@@ -461,7 +445,6 @@
                 return;
             }
 
-            // Create HTML content for the answer sheet
             let htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
@@ -621,7 +604,6 @@
     <button class="print-btn" onclick="window.print()">🖨️ Print Answer Sheet</button>
 `;
 
-            // Add all questions and answers
             Object.entries(submission.answers).forEach(([qKey, answer]) => {
                 const qNumber = qKey.replace('q', '');
                 const qNum = parseInt(qNumber) + 1;
@@ -658,7 +640,6 @@
 </body>
 </html>`;
 
-            // Open in new tab
             const newWindow = window.open();
             newWindow.document.write(htmlContent);
             newWindow.document.close();
