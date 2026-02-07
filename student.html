@@ -110,17 +110,60 @@
             background: #334155;
         }
 
+        /* ===== HEADER ===== */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 50px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+
+        [data-theme="dark"] .top-bar {
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         /* ===== DARK MODE BUTTON ===== */
         #themeBtn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 8px;
+            background: transparent;
+            color: var(--text-color);
+            border: 2px solid var(--input-bg);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
-            z-index: 9999;
-            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            margin: 0;
+            position: static;
+            /* Reset fixed position as it's now in header */
+        }
+
+        #themeBtn:hover {
+            background: var(--input-bg);
+            transform: rotate(15deg);
         }
 
         /* ===== CHEATING OVERLAY ===== */
@@ -160,6 +203,14 @@
 
 <body>
 
+    <!-- ===== HEADER ===== -->
+    <header class="top-bar">
+        <div class="logo">
+            <span>🎓</span> Student Portal
+        </div>
+        <button id="themeBtn" aria-label="Toggle Dark Mode">🌙</button>
+    </header>
+
     <!-- ===== CHEATING DETECTED OVERLAY ===== -->
     <div id="cheatOverlay">
         <div class="icon">🚫</div>
@@ -173,8 +224,7 @@
         </button>
     </div>
 
-    <!-- ===== DARK/LIGHT MODE BUTTON ===== -->
-    <button id="themeBtn">🌙 Dark Mode</button>
+
 
     <div id="loginArea" class="card">
         <h2>👨🎓 Student Entry</h2>
@@ -471,15 +521,13 @@
             location.reload();
         };
     </script>
-
-    <!-- ===== DARK/LIGHT MODE SCRIPT ===== -->
     <script>
         const themeBtn = document.getElementById("themeBtn");
 
         /* Load saved theme */
         if (localStorage.getItem("theme") === "dark") {
             document.documentElement.setAttribute("data-theme", "dark");
-            themeBtn.innerText = "☀️ Light Mode";
+            themeBtn.innerText = "☀️";
         }
 
         /* Toggle theme */
@@ -488,11 +536,11 @@
             if (current === "dark") {
                 document.documentElement.removeAttribute("data-theme");
                 localStorage.setItem("theme", "light");
-                themeBtn.innerText = "🌙 Dark Mode";
+                themeBtn.innerText = "🌙";
             } else {
                 document.documentElement.setAttribute("data-theme", "dark");
                 localStorage.setItem("theme", "dark");
-                themeBtn.innerText = "☀️ Light Mode";
+                themeBtn.innerText = "☀️";
             }
         });
     </script>
