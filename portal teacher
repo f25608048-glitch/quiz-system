@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Portal - Smart Quiz System</title>
+  <!-- Google Fonts: Inter for professional typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Excel & SheetJS Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+  <style>
+    :root {
+      --primary: #2563eb;
+      /* Royal Blue */
+      --primary-dark: #1e40af;
+      --secondary: #64748b;
+      --bg-body: #f8fafc;
+      /* Light Slate / Off-white */
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --success: #10b981;
+      --danger: #ef4444;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navbar */
+    .navbar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .user-info {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn-logout {
+      background: #fee2e2;
+      color: #b91c1c;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      border: 1px solid #fecaca;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .btn-logout:hover {
+      background: #fecaca;
+    }
+
+    /* Auth Screen */
+    #authScreen {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .auth-card {
+      background: var(--bg-card);
+      padding: 2.5rem;
+      border-radius: 1rem;
+      box-shadow: var(--shadow-md);
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .auth-card h2 {
+      margin-bottom: 1.5rem;
+      color: var(--text-main);
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      font-family: inherit;
+      background: #f8fafc;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    /* Dashboard Grid */
+    .dashboard-container {
+      display: none;
+      /* Hidden by default */
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .card {
+      background: var(--bg-card);
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+    }
+
+    .card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 0.5rem;
+    }
+
+    /* Upload Section Styles */
+    .upload-area {
+      border: 2px dashed #94a3b8;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      text-align: center;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 1rem;
+    }
+
+    .upload-area:hover {
+      border-color: var(--primary);
+      background: #eff6ff;
+    }
+
+    .upload-area label {
+      cursor: pointer;
+      display: block;
+    }
+
+    .upload-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      color: var(--secondary);
+    }
+
+    .sample-link {
+      color: var(--primary);
+      font-size: 0.85rem;
+      text-decoration: underline;
+      cursor: pointer;
+      display: block;
+      margin-top: 0.5rem;
+    }
+
+    .or-divider {
+      text-align: center;
+      margin: 1rem 0;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      position: relative;
+    }
+
+    .or-divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      border-top: 1px solid var(--border-color);
+      z-index: -1;
+    }
+
+    .or-divider span {
+      background: var(--bg-card);
+      padding: 0 10px;
+    }
+
+    /* Questions List */
+    .q-preview-item {
+      background: #f8fafc;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      border-left: 4px solid var(--primary);
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-remove {
+      background: #fee2e2;
+      color: #ef4444;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* Results List */
+    .result-item {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .result-item:last-child {
+      border-bottom: none;
+    }
+
+    .score-badge {
+      font-weight: 600;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+    }
+
+    .badge-pass {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-fail {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .btn-view {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .grading-q-block {
+      background: #f8fafc;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .grading-q-header {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-main);
+    }
+
+    .grading-answer {
+      background: white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+      margin-bottom: 1rem;
+    }
+
+    .grading-input {
+      width: 100px;
+      margin-bottom: 0;
+      display: inline-block;
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Result Overview Card Styles */
+    .result-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .overview-card {
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Student Info Panel */
+    .student-info-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .info-left h2 {
+      margin-bottom: 5px;
+      font-size: 1.5rem;
+      color: var(--text-main);
+    }
+
+    .info-left .meta {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .status-badge-lg {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    /* Circular Progress */
+    .circular-wrapper {
+      position: relative;
+      width: 120px;
+      height: 120px;
+    }
+
+    .circular-chart {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .circle-bg {
+      fill: none;
+      stroke: #eee;
+      stroke-width: 3.8;
+    }
+
+    .circle {
+      fill: none;
+      stroke-width: 2.8;
+      stroke-linecap: round;
+      animation: progress 1s ease-out forwards;
+    }
+
+    .percentage-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    .grade-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: block;
+      text-align: center;
+    }
+
+    @keyframes progress {
+      0% {
+        stroke-dasharray: 0 100;
+      }
+    }
+
+    /* Timer Card */
+    .timer-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+    }
+
+    .timer-label {
+      color: var(--text-muted);
+    }
+
+    .timer-val {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* Category Scores */
+    .cat-row {
+      margin-bottom: 12px;
+    }
+
+    .cat-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .cat-bar-bg {
+      background: #f1f5f9;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .cat-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+    }
+
+    /* Pastel Colors */
+    .fill-human {
+      background-color: #fca5a5;
+    }
+
+    /* Red */
+    .fill-maths {
+      background-color: #93c5fd;
+    }
+
+    /* Blue */
+    .fill-tech {
+      background-color: #86efac;
+    }
+
+    /* Green */
+    .fill-world {
+      background-color: #fde047;
+    }
+
+    /* Yellow */
+    .fill-lit {
+      background-color: #d8b4fe;
+    }
+
+    /* Purple */
+    .fill-general {
+      background-color: #cbd5e1;
+    }
+
+    /* Gray */
+
+    /* Action Buttons */
+    .action-row {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 20px;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    .btn-outline:hover {
+      background: #f8fafc;
+      border-color: var(--primary);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navbar (Visible only when logged in) -->
+  <nav class="navbar" id="navbar" style="display: none;">
+    <a href="#" class="logo">
+      <span>👨‍🏫 Teacher Portal</span>
+    </a>
+    <div class="user-info">
+      <span id="navUserEmail"></span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <!-- Auth Screen -->
+  <div id="authScreen">
+    <div class="auth-card">
+      <h2>Teacher Login</h2>
+      <p style="color:var(--text-muted); margin-bottom:1.5rem;">Access your exam dashboard</p>
+
+      <input type="email" id="tEmail" placeholder="Email Address">
+      <input type="text" id="tUser" placeholder="Teacher ID (e.g., T-101)">
+      <input type="password" id="tPass" placeholder="Password">
+
+      <button class="btn-primary" onclick="handleAuth()">Login / Register</button>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="dashboard-container" id="dashboard">
+
+    <!-- Left Column: Exam Creation -->
+    <div class="main-column">
+      <div class="card">
+        <h3>📝 Setup Exam Configuration</h3>
+
+        <h4>Step 1: Allowed Students (Roll Numbers)</h4>
+
+        <!-- Bulk Upload Roll Numbers -->
+        <div class="upload-area">
+          <label for="rollFileInput">
+            <div class="upload-icon">📥</div>
+            <strong>Upload Excel File</strong><br>
+            <span style="font-size:0.85rem; color:var(--text-muted);">(.xlsx, .csv) with Roll Numbers</span>
+          </label>
+          <input type="file" id="rollFileInput" accept=".xlsx,.xls,.csv" onchange="handleRollUpload(event)"
+            style="display:none;">
+          <div id="rollUploadStatus" style="color:var(--success); font-weight:600; margin-top:0.5rem; display:none;">
+          </div>
+          <span class="sample-link" onclick="downloadSampleRolls()">📄 Download Sample Format</span>
+        </div>
+
+        <div class="or-divider"><span>OR Type Manually</span></div>
+        <textarea id="rollList" placeholder="Enter Roll Numbers separated by commas (e.g. 101, 102, 103)"
+          rows="3"></textarea>
+      </div>
+
+      <div class="card">
+        <h3>❓ Add Questions</h3>
+
+        <!-- Bulk Upload Questions -->
+        <div class="upload-area">
+          <label for="questionFileInput">
+            <div class="upload-icon">📝</div>
+            <strong>Upload Questions Excel</strong><br>
+            <span style="font-size:0.85rem; color:var(--text-muted);">Auto-detects MCQ & Subjective</span>
+          </label>
+          <input type="file" id="questionFileInput" accept=".xlsx,.xls,.csv" onchange="handleQuestionUpload(event)"
+            style="display:none;">
+          <div id="questionUploadStatus"
+            style="color:var(--success); font-weight:600; margin-top:0.5rem; display:none;"></div>
+          <span class="sample-link" onclick="downloadSampleQuestions()">📄 Download Sample Format</span>
+        </div>
+
+        <div class="or-divider"><span>OR Add Individually</span></div>
+
+        <div style="background:#f8fafc; padding:1.5rem; border-radius:0.75rem; border:1px solid var(--border-color);">
+          <select id="qCategory" style="margin-bottom: 10px;">
+            <option value="General">Category: General</option>
+            <option value="Human">Category: Human</option>
+            <option value="Maths">Category: Maths</option>
+            <option value="Technology">Category: Technology</option>
+            <option value="World">Category: World</option>
+            <option value="Literature">Category: Literature</option>
+          </select>
+          <select id="qType" onchange="toggleFields()">
+            <option value="subjective">Subjective / Essay Question</option>
+            <option value="mcq">Multiple Choice Question (MCQ)</option>
+          </select>
+
+          <input type="text" id="qText" placeholder="Enter Question Statement">
+
+          <div id="mcqBox" style="display:none;">
+            <input type="text" id="optA" placeholder="Option A">
+            <input type="text" id="optB" placeholder="Option B">
+            <input type="text" id="optC" placeholder="Option C">
+            <input type="text" id="optD" placeholder="Option D">
+            <select id="correctOpt">
+              <option value="A">Correct Answer: A</option>
+              <option value="B">Correct Answer: B</option>
+              <option value="C">Correct Answer: C</option>
+              <option value="D">Correct Answer: D</option>
+            </select>
+          </div>
+
+          <button class="btn-primary" onclick="addQuestion()" style="background:#4f46e5;">➕ Add to
+            Paper</button>
+        </div>
+
+        <div id="preview" style="margin-top:1.5rem;">
+          <!-- Questions will appear here -->
+        </div>
+
+        <button class="btn-primary" onclick="publish()"
+          style="margin-top:2rem; background:var(--success); font-size:1.1rem;">🚀 Publish Live Exam</button>
+      </div>
+    </div>
+
+    <!-- Right Column: Results & Analytics -->
+    <div class="side-column">
+      <div class="card">
+        <h3>📊 Live Results</h3>
+        <input type="text" id="rollSearch" placeholder="🔍 Search Roll #" oninput="filterResults()">
+
+        <div id="resList" style="max-height:400px; overflow-y:auto;">
+          <p style="text-align:center; color:var(--text-muted); padding:1rem;">No submissions yet.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📄 Exports</h3>
+        <button class="btn-primary" onclick="exportLoginsToExcel()" style="background:#059669;">
+          📥 Export All Records (Excel)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grading Modal -->
+  <div class="modal" id="gradingModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeGradingModal()">×</span>
+      <h2 id="gradingTitle"
+        style="margin-bottom:1.5rem; border-bottom:2px solid var(--border-color); padding-bottom:1rem;">Grading
+        Paper</h2>
+
+      <div id="gradingContent">
+        <!-- Content injected via JS -->
+      </div>
+
+      <div style="margin-top:2rem; text-align:right;">
+        <button class="btn-primary" onclick="saveGrades()" style="width:200px;">💾 Save Marks</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Logic -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBOVvfW63xx10C4_l9obcQMC64cDFGndZ8",
+      authDomain: "smart-quiz-system-d59d9.firebaseapp.com",
+      databaseURL: "https://smart-quiz-system-d59d9-default-rtdb.firebaseio.com",
+      projectId: "smart-quiz-system-d59d9",
+      storageBucket: "smart-quiz-system-d59d9.firebasestorage.app",
+      messagingSenderId: "38603211706",
+      appId: "1:38603211706:web:57b1e7a3d48426544ad383"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let currentID = "";
+    let paper = [];
+    let allSubmissions = {};
+    let allLogins = {};
+    let currentGradingRoll = null;
+
+    // Auth State Observer
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Determine Teacher ID (Username) from localStorage or just use email part
+        // Since this is a simple system, we rely on the teacher ID they entered during manual login if possible,
+        // or we fetch it. For simplicity in this structure:
+        const storedID = localStorage.getItem('teacherID');
+        if (storedID) startDash(storedID, user.email);
+      }
+    });
+
+    window.toggleFields = () => {
+      const type = document.getElementById('qType').value;
+      document.getElementById('mcqBox').style.display = (type === 'mcq') ? 'block' : 'none';
+    };
+
+    window.handleAuth = () => {
+      const email = document.getElementById('tEmail').value;
+      const pass = document.getElementById('tPass').value;
+      const user = document.getElementById('tUser').value.trim().toLowerCase();
+
+      if (!email || !pass || !user) return alert("Please fill all fields!");
+
+      signInWithEmailAndPassword(auth, email, pass)
+        .then(() => {
+          localStorage.setItem('teacherID', user);
+          startDash(user, email);
+        })
+        .catch(() => {
+          createUserWithEmailAndPassword(auth, email, pass)
+            .then(() => {
+              set(ref(db, 'teachers/' + user), { email });
+              localStorage.setItem('teacherID', user);
+              startDash(user, email);
+            })
+            .catch(e => alert(e.message));
+        });
+    };
+
+    window.logout = () => {
+      signOut(auth).then(() => {
+        localStorage.removeItem('teacherID');
+        location.reload();
+      });
+    };
+
+    function startDash(user, email) {
+      currentID = user;
+      document.getElementById('authScreen').style.display = "none";
+      document.getElementById('dashboard').style.display = "grid";
+      document.getElementById('navbar').style.display = "flex";
+      document.getElementById('navUserEmail').innerText = `ID: ${user} | ${email}`;
+
+      // Listen for submissions
+      onValue(ref(db, `exams/${user}/submissions`), (snap) => {
+        if (snap.exists()) {
+          allSubmissions = snap.val();
+          renderResults(allSubmissions);
+        } else {
+          document.getElementById('resList').innerHTML = "<p style='text-align:center; padding:10px;'>No submissions yet.</p>";
+        }
+      });
+
+      // Listen for logins
+      onValue(ref(db, `student-logins/${user}`), (snap) => {
+        if (snap.exists()) {
+          allLogins = snap.val();
+        }
+      });
+    }
+
+    window.renderResults = (data) => {
+      const list = document.getElementById('resList');
+      list.innerHTML = "";
+
+      Object.entries(data).forEach(([roll, s]) => {
+        const isPass = s.score >= 50;
+        list.innerHTML += `
+                <div class='result-item'>
+                    <div>
+                        <strong>${s.name || roll}</strong>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">Roll: ${roll}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <span class="score-badge ${isPass ? 'badge-pass' : 'badge-fail'}">${s.score}%</span>
+                        <div style="margin-top:5px;">
+                            <button class="btn-view" onclick="openGrading('${roll}')">📝 Grade/View</button>
+                        </div>
+                    </div>
+                </div>`;
+      });
+    };
+
+    // ===== GRADING SYSTEM =====
+    // ===== RESULT & GRADING SYSTEM =====
+    window.openGrading = (roll) => {
+      currentGradingRoll = roll;
+      const sub = allSubmissions[roll];
+      if (!sub) return;
+
+      const modal = document.getElementById('gradingModal');
+      const overview = document.getElementById('resultOverview');
+      const grading = document.getElementById('gradingContent');
+      // Save button container
+      const saveBtnDiv = document.querySelector('#gradingModal button[onclick="saveGrades()"]').parentNode;
+
+      document.getElementById('gradingTitle').innerText = `Result Summary: ${sub.name || roll}`;
+
+      // Reset View: Show Overview, Hide Grading
+      grading.style.display = 'none';
+      saveBtnDiv.style.display = 'none';
+      overview.style.display = 'block';
+
+      // Calculate Stats
+      const stats = calculateResult(sub);
+
+      // Render Overview
+      renderResultSummary(sub, stats);
+
+      // Prepare Detailed View (Hidden)
+      populateGradingContent(sub);
+
+      modal.style.display = 'flex';
+    };
+
+    window.toggleViewAnswers = () => {
+      const overview = document.getElementById('resultOverview');
+      const grading = document.getElementById('gradingContent');
+      const saveBtnDiv = document.querySelector('#gradingModal button[onclick="saveGrades()"]').parentNode;
+
+      const sub = allSubmissions[currentGradingRoll];
+
+      if (grading.style.display === 'none') {
+        overview.style.display = 'none';
+        grading.style.display = 'block';
+        saveBtnDiv.style.display = 'block'; // Show save button in grading mode
+        document.getElementById('gradingTitle').innerText = `Grading: ${sub.name || currentGradingRoll}`;
+      } else {
+        grading.style.display = 'none';
+        saveBtnDiv.style.display = 'none';
+        overview.style.display = 'block';
+        document.getElementById('gradingTitle').innerText = `Result Summary: ${sub.name || currentGradingRoll}`;
+      }
+    };
+
+    function calculateResult(sub) {
+      let total = 0, correct = 0, wrong = 0, manual = 0;
+      let cats = {
+        'Human': { t: 0, s: 0 },
+        'Maths': { t: 0, s: 0 },
+        'Technology': { t: 0, s: 0 },
+        'World': { t: 0, s: 0 },
+        'Literature': { t: 0, s: 0 },
+        'General': { t: 0, s: 0 }
+      };
+
+      if (sub.answers) {
+        Object.values(sub.answers).forEach(ans => {
+          total++;
+          let score = 0;
+          let maxScore = 1;
+
+          if (ans.type === 'mcq') {
+            if (ans.isCorrect) { score = 1; correct++; } else { wrong++; }
+          } else {
+            // Subjective
+            if (ans.manualScore !== undefined) {
+              score = ans.manualScore;
+              manual++;
+            }
+          }
+
+          // Category Logic
+          const c = ans.category || 'General';
+          if (!cats[c]) cats[c] = { t: 0, s: 0 }; // fallback for custom cats
+          cats[c].t += maxScore;
+          cats[c].s += score;
+        });
+      }
+
+      // Calculate Percentages
+      const catScores = [];
+      Object.entries(cats).forEach(([k, v]) => {
+        if (v.t > 0) {
+          const perc = Math.round((v.s / v.t) * 100);
+          catScores.push({ name: k, perc: perc, earned: v.s, total: v.t });
+        }
+      });
+
+      // Overall Percentage (Use stored score if available)
+      const finalPerc = sub.score !== undefined ? sub.score : (total > 0 ? Math.round(((correct + manual) / total) * 100) : 0);
+      const passed = finalPerc >= 50;
+
+      return { total, correct, finalPerc, passed, catScores };
+    }
+
+    function renderResultSummary(sub, stats) {
+      const ov = document.getElementById('resultOverview');
+      const color = stats.passed ? '#10b981' : '#ef4444';
+      const bgClass = stats.passed ? 'status-pass' : 'status-fail';
+      const statusText = stats.passed ? '✅ Test Passed' : '❌ Test Failed';
+      const grade = stats.finalPerc >= 90 ? 'A' : (stats.finalPerc >= 75 ? 'B' : (stats.finalPerc >= 50 ? 'C' : 'F'));
+
+      // Circular Progress Calc
+      const radius = 54;
+      const circumference = 2 * Math.PI * radius;
+      const offset = circumference - (stats.finalPerc / 100) * circumference;
+
+      // Categories HTML
+      let catHTML = stats.catScores.map(c => {
+        let catClass = 'general';
+        if (c.name === 'Human') catClass = 'human';
+        if (c.name === 'Maths') catClass = 'maths';
+        if (c.name === 'Technology') catClass = 'tech';
+        if (c.name === 'World') catClass = 'world';
+        if (c.name === 'Literature') catClass = 'lit';
+
+        return `
+           <div class="cat-row">
+               <div class="cat-header">
+                   <span>${c.name}</span>
+                   <span>${c.perc}% (${c.earned}/${c.total})</span>
+               </div>
+               <div class="cat-bar-bg">
+                   <div class="cat-bar-fill fill-${catClass}" style="width: ${c.perc}%"></div>
+               </div>
+           </div>`;
+      }).join('');
+
+      if (stats.catScores.length === 0) catHTML = '<div style="color:#aaa; font-style:italic;">No category data available</div>';
+
+      ov.innerHTML = `
+       <div class="result-grid">
+            <!-- Left Card: Student Info -->
+            <div class="overview-card student-info-panel">
+                <div class="info-left">
+                    <h2>${sub.name || 'Student Name'}</h2>
+                    <div class="meta">
+                        <div>Roll Number: <strong>${currentGradingRoll}</strong></div>
+                        <div>Exam: Final Assessment</div>
+                        <div>Grade: <strong>${grade}</strong></div>
+                    </div>
+                    <div class="status-badge-lg ${bgClass}">
+                        ${statusText}
+                    </div>
+                </div>
+                
+                <div class="circular-wrapper">
+                    <svg class="circular-chart" viewBox="0 0 120 120">
+                        <circle class="circle-bg" cx="60" cy="60" r="54" />
+                        <circle id="progCircle" class="circle" cx="60" cy="60" r="54" 
+                                style="stroke: ${color}; stroke-dasharray: ${circumference}; stroke-dashoffset: ${circumference}; transition: stroke-dashoffset 1s ease-out;" /> 
+                    </svg>
+                    <div class="percentage-text" style="color:${color}">${stats.finalPerc}%</div>
+                </div>
+            </div>
+
+            <!-- Timer Card -->
+            <div class="timer-card">
+                <div style="font-weight:bold; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;">⏱ Time Details</div>
+                <div class="timer-row"><span class="timer-label">Allowed Time</span> <span class="timer-val">90 min</span></div>
+                <div class="timer-row"><span class="timer-label">Time Taken</span> <span class="timer-val">--</span></div>
+                <div class="timer-row"><span class="timer-label">Start Time</span> <span class="timer-val">--</span></div>
+                <div class="timer-row"><span class="timer-label">End Time</span> <span class="timer-val">--</span></div>
+            </div>
+
+            <!-- Categories Card -->
+            <div class="overview-card" style="grid-column: 1 / -1;">
+                <h3 style="margin-bottom:15px; font-size:1.1rem;">Score per Category</h3>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
+                    ${catHTML}
+                </div>
+
+                <div class="action-row">
+                    <button class="action-btn" onclick="closeGradingModal()">Start Again</button>
+                    <button class="action-btn btn-outline" onclick="exportLoginsToExcel()">📄 Download Result</button>
+                    <button class="action-btn btn-blue" onclick="toggleViewAnswers()">📝 View Answers</button>
+                </div>
+            </div>
+       </div>
+       `;
+
+      setTimeout(() => {
+        const el = document.getElementById('progCircle');
+        if (el) el.style.strokeDashoffset = offset;
+      }, 100);
+    }
+
+    function populateGradingContent(sub) {
+      const content = document.getElementById('gradingContent');
+      content.innerHTML = '';
+      let qIndex = 0;
+      if (sub.answers) {
+        Object.values(sub.answers).forEach((ans) => {
+          qIndex++;
+          const isMCQ = ans.type === 'mcq';
+
+          let html = `
+                    <div class="grading-q-block">
+                        <div class="grading-q-header">Q${qIndex}: ${ans.question} <span style="font-weight:normal; font-size:0.85rem; color:#64748b;">(${ans.type.toUpperCase()})</span></div>
+                        
+                        <div class="grading-answer">
+                            <div style="font-size:0.9rem; margin-bottom:0.5rem; color:#64748b;">Student Answer:</div>
+                            <div style="font-weight:500; white-space:pre-wrap;">${ans.selected || ans.answer || 'Not Answered'}</div>
+                        </div>`;
+
+          if (isMCQ) {
+            html += `
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-size:0.9rem;">Correct: <strong>${ans.correct}</strong></div>
+                            <div class="score-badge ${ans.isCorrect ? 'badge-pass' : 'badge-fail'}">
+                                ${ans.isCorrect ? 'Correct (+1)' : 'Incorrect (0)'}
+                            </div>
+                        </div>`;
+          } else {
+            // Subjective Input
+            html += `
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="font-weight:600;">Marks (0-1):</label>
+                            <input type="number" id="grade-q${qIndex - 1}" class="grading-input" 
+                                value="${ans.manualScore !== undefined ? ans.manualScore : (ans.answer ? 0 : 0)}" 
+                                min="0" max="1" step="0.5">
+                        </div>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">
+                            Review the answer and assign manual marks (0 or 1).
+                        </div>`;
+          }
+
+          html += `</div>`;
+          content.innerHTML += html;
+        });
+      }
+    }
+
+    window.closeGradingModal = () => {
+      document.getElementById('gradingModal').style.display = 'none';
+      currentGradingRoll = null;
+    };
+
+    window.saveGrades = async () => {
+      if (!currentGradingRoll) return;
+
+      const sub = allSubmissions[currentGradingRoll];
+      let totalMarks = 0;
+      let totalQuestions = 0;
+      const updatedAnswers = { ...sub.answers };
+
+      let qIndex = 0;
+      Object.keys(updatedAnswers).forEach((key) => {
+        const ans = updatedAnswers[key];
+        totalQuestions++;
+
+        if (ans.type === 'subjective') {
+          // Get manual score from input
+          const input = document.getElementById(`grade-q${qIndex}`);
+          if (input) {
+            const score = parseFloat(input.value) || 0;
+            ans.manualScore = score; // Save manual score
+            totalMarks += score;
+          } else if (ans.manualScore) {
+            totalMarks += ans.manualScore;
+          }
+        } else {
+          // MCQ logic
+          if (ans.isCorrect) totalMarks++;
+        }
+        qIndex++;
+      });
+
+      const finalPercentage = Math.round((totalMarks / totalQuestions) * 100);
+
+      // Update Firebase
+      const updates = {};
+      // Update submission record
+      updates[`exams/${currentID}/submissions/${currentGradingRoll}/score`] = finalPercentage;
+      updates[`exams/${currentID}/submissions/${currentGradingRoll}/answers`] = updatedAnswers;
+      updates[`exams/${currentID}/submissions/${currentGradingRoll}/graded`] = true;
+
+      // Also update student history if it exists
+      // Since we store history under email/safeEmail, we try if email exists
+      if (sub.email) {
+        // Note: Ideally student email would be used as a key for history. 
+        // For now, simpler sync logic: Just updating the submission is enough because 
+        // the Student Portal will fetch directly from exams/{teacherID}/submissions/{roll}
+        // OR fetch from a history node. 
+        // Let's stick to updating the main record first.
+      }
+
+      try {
+        await update(ref(db), updates);
+        alert(`✅ Grades Saved! New Score: ${finalPercentage}%`);
+        closeGradingModal();
+      } catch (e) {
+        alert("Error saving: " + e.message);
+      }
+    };
+
+    // ===== EXCEL UPLOAD LOGIC (Preserved) =====
+    window.handleRollUpload = (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+        const rolls = jsonData.flat().filter(r => r && (String(r).toLowerCase() !== 'roll number'));
+
+        const current = document.getElementById('rollList').value;
+        const set = new Set(current ? current.split(',').map(s => s.trim()) : []);
+        rolls.forEach(r => set.add(r));
+
+        document.getElementById('rollList').value = Array.from(set).join(', ');
+        document.getElementById('rollUploadStatus').innerText = `✅ Loaded ${rolls.length} rolls`;
+        document.getElementById('rollUploadStatus').style.display = 'block';
+      };
+      reader.readAsArrayBuffer(file);
+    };
+
+    window.handleQuestionUpload = (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+        let count = 0;
+        jsonData.forEach(row => {
+          // Basic parsing logic (improved resilience)
+          const qText = row['Question'] || row['question'] || row['Q'];
+          if (!qText) return;
+
+          let qObj = { text: qText, type: 'subjective' };
+
+          // Detect MCQ
+          const optA = row['Option A'] || row['A'];
+          if (optA) {
+            qObj.type = 'mcq';
+            qObj.options = {
+              A: String(optA),
+              B: String(row['Option B'] || row['B'] || ''),
+              C: String(row['Option C'] || row['C'] || ''),
+              D: String(row['Option D'] || row['D'] || '')
+            };
+            qObj.correct = String(row['Correct'] || row['Answer'] || 'A').toUpperCase();
+          }
+          paper.push(qObj);
+          count++;
+        });
+
+        updatePreview();
+        alert(`✅ Added ${count} questions!`);
+      };
+      reader.readAsArrayBuffer(file);
+    };
+
+    window.addQuestion = () => {
+      const type = document.getElementById('qType').value;
+      const text = document.getElementById('qText').value;
+      const category = document.getElementById('qCategory').value;
+      if (!text) return alert("Enter question text!");
+
+      let q = { text, type, category };
+      if (type === 'mcq') {
+        q.options = {
+          A: document.getElementById('optA').value,
+          B: document.getElementById('optB').value,
+          C: document.getElementById('optC').value,
+          D: document.getElementById('optD').value
+        };
+        q.correct = document.getElementById('correctOpt').value;
+      }
+      paper.push(q);
+      updatePreview();
+      document.getElementById('qText').value = "";
+    };
+
+    function updatePreview() {
+      const p = document.getElementById('preview');
+      p.innerHTML = "";
+      paper.forEach((q, i) => {
+        p.innerHTML += `
+                <div class="q-preview-item">
+                    <span><strong>Q${i + 1}:</strong> ${q.text}</span>
+                    <button class="btn-remove" onclick="removeQ(${i})">×</button>
+                </div>`;
+      });
+    }
+
+    window.removeQ = (i) => {
+      paper.splice(i, 1);
+      updatePreview();
+    };
+
+    window.publish = () => {
+      const rolls = document.getElementById('rollList').value.split(',').map(r => r.trim()).filter(r => r);
+      if (paper.length === 0) return alert("Add questions first!");
+      if (rolls.length === 0) return alert("Add allowed roll numbers!");
+
+      set(ref(db, `exams/${currentID}`), {
+        questions: paper,
+        allowedList: rolls,
+        publishedAt: Date.now()
+      }).then(() => alert("✅ Exam Published Successfully!"));
+    };
+
+    // Export Helper for Excel
+    window.exportLoginsToExcel = async () => {
+      if (Object.keys(allSubmissions).length === 0 && Object.keys(allLogins).length === 0) {
+        alert("No student data to export!");
+        return;
+      }
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Student Records');
+
+      worksheet.columns = [
+        { header: 'Roll Number', key: 'rollNumber', width: 15 },
+        { header: 'Student Name', key: 'name', width: 25 },
+        { header: 'Email', key: 'email', width: 35 },
+        { header: 'Total Questions', key: 'totalQuestions', width: 16 },
+        { header: 'Right', key: 'right', width: 10 },
+        { header: 'Wrong', key: 'wrong', width: 10 },
+        { header: 'Score (%)', key: 'marks', width: 15 },
+        { header: 'Graded', key: 'graded', width: 10 },
+        { header: 'Status', key: 'status', width: 12 }
+      ];
+
+      // Style header row
+      const headerRow = worksheet.getRow(1);
+      headerRow.height = 25;
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
+      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+      headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+      headerRow.eachCell(cell => {
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+      });
+
+      // Merge all data sources
+      const allRolls = new Set([...Object.keys(allSubmissions), ...Object.keys(allLogins)]);
+
+      allRolls.forEach(roll => {
+        const sub = allSubmissions[roll] || {};
+        const login = allLogins[roll] || {};
+
+        const marks = sub.score !== undefined ? sub.score : '-';
+        const status = marks === '-' ? 'N/A' : (marks >= 50 ? 'PASS' : 'FAIL');
+
+        const row = worksheet.addRow({
+          rollNumber: roll,
+          name: sub.name || login.name || '-',
+          email: sub.email || login.email || '-',
+          totalQuestions: sub.totalQuestions || (sub.answers ? Object.keys(sub.answers).length : '-'),
+          right: sub.rightAnswers || '-',
+          wrong: sub.wrongAnswers || '-',
+          marks: marks,
+          graded: sub.graded ? 'Yes' : 'No',
+          status: status
+        });
+
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+            left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+            bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+            right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
+          };
+
+          // Color code status column
+          if (colNumber === 9) {
+            if (cell.value === 'FAIL') {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF0000' } };
+              cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+            } else if (cell.value === 'PASS') {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF00B050' } };
+              cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+            }
+          }
+
+          // Alternate row colors
+          if (row.number % 2 === 0 && colNumber !== 9) {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
+          }
+        });
+      });
+
+      const filename = `Student_Records_${currentID}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+
+      alert(`✅ Excel file downloaded: ${filename}`);
+    };
+
+    // Sample Downloaders
+    window.downloadSampleRolls = () => {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet([["Roll Number"], ["1001"], ["1002"]]);
+      XLSX.utils.book_append_sheet(wb, ws, "Rolls");
+      XLSX.writeFile(wb, "Sample_Rolls.xlsx");
+    };
+
+    window.downloadSampleQuestions = () => {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet([
+        ["Question", "Option A", "Option B", "Option C", "Option D", "Correct"],
+        ["What is 2+2?", "3", "4", "5", "6", "B"],
+        ["Describe AI", "", "", "", "", ""] // Subjective
+      ]);
+      XLSX.utils.book_append_sheet(wb, ws, "Questions");
+      XLSX.writeFile(wb, "Sample_Questions.xlsx");
+    };
+
+    // Expose to window
+    window.startDash = startDash;
+  </script>
+</body>
+
+</html>
