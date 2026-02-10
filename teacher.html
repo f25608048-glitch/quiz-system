@@ -877,19 +877,96 @@
 
         // Export Helper for Excel
         window.exportLoginsToExcel = async () => {
-            const workbook = new ExcelJS.Workbook();
-            const sheet = workbook.addWorksheet('Students');
+            if (Object.keys(allSubmissions).length === 0 && Object.keys(allLogins).length === 0) {
+                alert("No student data to export!");
+                return;
+            }
 
-            sheet.columns = [
-                { header: 'Name', key: 'name', width: 20 },
-                { header: 'Email', key: 'email', width: 25 },
-                { header: 'Score', key: 'score', width: 10 },
-                { header: 'Status', key: 'status', width: 10 }
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Student Records');
+
+            worksheet.columns = [
+                { header: 'Roll Number', key: 'rollNumber', width: 15 },
+                { header: 'Student Name', key: 'name', width: 25 },
+                { header: 'Email', key: 'email', width: 35 },
+                { header: 'Total Questions', key: 'totalQuestions', width: 16 },
+                { header: 'Right', key: 'right', width: 10 },
+                { header: 'Wrong', key: 'wrong', width: 10 },
+                { header: 'Score (%)', key: 'marks', width: 15 },
+                { header: 'Graded', key: 'graded', width: 10 },
+                { header: 'Status', key: 'status', width: 12 }
             ];
 
-            // ... (Keep existing export logic simplified for brevity but functional) ...
-            // Reusing the robust logic from previous implementation if needed or kept simple here
-            alert("Export feature checks console for now (full logic preserved in previous version if copy-pasted)");
+            // Style header row
+            const headerRow = worksheet.getRow(1);
+            headerRow.height = 25;
+            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
+            headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+            headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+            headerRow.eachCell(cell => {
+                cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+            });
+
+            // Merge all data sources
+            const allRolls = new Set([...Object.keys(allSubmissions), ...Object.keys(allLogins)]);
+
+            allRolls.forEach(roll => {
+                const sub = allSubmissions[roll] || {};
+                const login = allLogins[roll] || {};
+
+                const marks = sub.score !== undefined ? sub.score : '-';
+                const status = marks === '-' ? 'N/A' : (marks >= 50 ? 'PASS' : 'FAIL');
+
+                const row = worksheet.addRow({
+                    rollNumber: roll,
+                    name: sub.name || login.name || '-',
+                    email: sub.email || login.email || '-',
+                    totalQuestions: sub.totalQuestions || (sub.answers ? Object.keys(sub.answers).length : '-'),
+                    right: sub.rightAnswers || '-',
+                    wrong: sub.wrongAnswers || '-',
+                    marks: marks,
+                    graded: sub.graded ? 'Yes' : 'No',
+                    status: status
+                });
+
+                row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                        left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                        bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                        right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
+                    };
+
+                    // Color code status column
+                    if (colNumber === 9) {
+                        if (cell.value === 'FAIL') {
+                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF0000' } };
+                            cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+                        } else if (cell.value === 'PASS') {
+                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF00B050' } };
+                            cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+                        }
+                    }
+
+                    // Alternate row colors
+                    if (row.number % 2 === 0 && colNumber !== 9) {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
+                    }
+                });
+            });
+
+            const filename = `Student_Records_${currentID}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = filename;
+            anchor.click();
+            window.URL.revokeObjectURL(url);
+
+            alert(`✅ Excel file downloaded: ${filename}`);
         };
 
         // Sample Downloaders
