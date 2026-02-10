@@ -110,6 +110,79 @@
         .view-btn:hover {
             background: #7c3aed;
         }
+
+        /* ===== NEW: Upload Section Styles ===== */
+        .upload-section {
+            background: #334155;
+            border: 2px dashed #64748b;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .upload-section:hover {
+            border-color: #3b82f6;
+            background: #3b455a;
+        }
+
+        .upload-section label {
+            display: block;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .upload-section label:hover {
+            color: white;
+        }
+
+        .upload-section input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .upload-status {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #10b981;
+            display: none;
+        }
+
+        .or-divider {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.85rem;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            flex: 1;
+            border-top: 1px solid #475569;
+        }
+
+        .sample-link {
+            color: #60a5fa;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .sample-link:hover {
+            color: #93bbfc;
+        }
     </style>
     <!-- SheetJS Library for Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -130,10 +203,43 @@
     <div class="container" id="dashboard">
         <div class="box">
             <h2 id="welcomeMsg">Welcome</h2>
-            <h3>1. Setup Exam</h3>
-            <textarea id="rollList" placeholder="Allowed Rolls (e.g. 101, 102)"></textarea>
 
+            <!-- ===== SECTION 1: SETUP EXAM (Roll Numbers) ===== -->
+            <h3>1. Setup Exam - Add Roll Numbers</h3>
+
+            <!-- NEW: Excel Upload for Roll Numbers -->
+            <div class="upload-section" id="rollUploadSection">
+                <div class="upload-icon">📥</div>
+                <label for="rollFileInput">
+                    <strong>Upload Excel File</strong><br>
+                    Click here to upload roll numbers from Excel
+                </label>
+                <input type="file" id="rollFileInput" accept=".xlsx,.xls,.csv" onchange="handleRollUpload(event)">
+                <div class="upload-status" id="rollUploadStatus"></div>
+                <span class="sample-link" onclick="downloadSampleRolls()">📄 Download Sample Format</span>
+            </div>
+
+            <div class="or-divider">OR type manually</div>
+
+            <textarea id="rollList" placeholder="Allowed Rolls (e.g. 101, 102, 103)"></textarea>
+
+            <!-- ===== SECTION 2: ADD QUESTIONS ===== -->
             <h3>2. Add Questions</h3>
+
+            <!-- NEW: Excel Upload for Questions -->
+            <div class="upload-section" id="questionUploadSection">
+                <div class="upload-icon">📝</div>
+                <label for="questionFileInput">
+                    <strong>Upload Questions from Excel</strong><br>
+                    Click here to bulk-add MCQ & Subjective questions
+                </label>
+                <input type="file" id="questionFileInput" accept=".xlsx,.xls,.csv" onchange="handleQuestionUpload(event)">
+                <div class="upload-status" id="questionUploadStatus"></div>
+                <span class="sample-link" onclick="downloadSampleQuestions()">📄 Download Sample Format</span>
+            </div>
+
+            <div class="or-divider">OR add manually one-by-one</div>
+
             <select id="qType" onchange="toggleFields()">
                 <option value="subjective">Subjective Question</option>
                 <option value="mcq">MCQ (Multiple Choice)</option>
@@ -156,6 +262,10 @@
 
             <button onclick="addQuestion()" style="background:#6366f1;">Add to Paper ➕</button>
             <div id="preview" style="margin-top:15px;"></div>
+
+            <!-- NEW: Clear All Questions Button -->
+            <button onclick="clearAllQuestions()" style="background:#ef4444; margin-top:10px; display:none;" id="clearQuestionsBtn">🗑️ Clear All Questions</button>
+
             <button onclick="publish()" style="background:#10b981; margin-top:20px;">Publish Exam 🚀</button>
         </div>
 
@@ -168,7 +278,7 @@
             <button onclick="location.reload()" style="background:#ef4444; margin-top:30px;">Logout</button>
         </div>
 
-        <!-- ===== NEW: Student Login Tracker Box ===== -->
+        <!-- ===== Student Login Tracker Box ===== -->
         <div class="box" style="width: 100%;">
             <h3>👥 Student Records & Login Tracker</h3>
             <button onclick="exportLoginsToExcel()" style="background:#10b981; margin-bottom:15px;">
@@ -248,6 +358,203 @@
                 }
             });
         }
+
+        // ===== NEW: Handle Roll Number Excel Upload =====
+        window.handleRollUpload = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                    // Extract roll numbers from first column, skip header if text
+                    const rolls = [];
+                    jsonData.forEach((row, index) => {
+                        if (row[0] !== undefined && row[0] !== null && row[0] !== '') {
+                            const val = String(row[0]).trim();
+                            // Skip if it looks like a header
+                            if (index === 0 && isNaN(val) && val.toLowerCase().includes('roll')) return;
+                            if (val) rolls.push(val);
+                        }
+                    });
+
+                    if (rolls.length === 0) {
+                        alert('❌ No roll numbers found in the file! Make sure roll numbers are in the first column.');
+                        return;
+                    }
+
+                    // Get existing rolls and merge
+                    const existing = document.getElementById('rollList').value.trim();
+                    const existingRolls = existing ? existing.split(',').map(r => r.trim()).filter(r => r) : [];
+                    const allRolls = [...new Set([...existingRolls, ...rolls])]; // Remove duplicates
+
+                    document.getElementById('rollList').value = allRolls.join(', ');
+
+                    // Show success status
+                    const status = document.getElementById('rollUploadStatus');
+                    status.style.display = 'block';
+                    status.textContent = `✅ ${rolls.length} roll numbers loaded from "${file.name}"`;
+
+                    alert(`✅ ${rolls.length} roll numbers imported successfully!\nTotal: ${allRolls.length} roll numbers ready.`);
+                } catch (err) {
+                    alert('❌ Error reading file: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        };
+
+        // ===== NEW: Handle Questions Excel Upload =====
+        window.handleQuestionUpload = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                    if (jsonData.length === 0) {
+                        alert('❌ No questions found in the file!');
+                        return;
+                    }
+
+                    let addedCount = 0;
+                    let errorCount = 0;
+
+                    jsonData.forEach((row) => {
+                        // Flexible column name matching (case-insensitive)
+                        const question = row['Question'] || row['question'] || row['QUESTION'] || row['Q'] || row['q'] || '';
+                        const type = (row['Type'] || row['type'] || row['TYPE'] || 'subjective').toString().toLowerCase().trim();
+
+                        if (!question.trim()) {
+                            errorCount++;
+                            return;
+                        }
+
+                        let qObj = { text: question.trim() };
+
+                        if (type === 'mcq') {
+                            const optA = row['Option A'] || row['option a'] || row['A'] || row['a'] || '';
+                            const optB = row['Option B'] || row['option b'] || row['B'] || row['b'] || '';
+                            const optC = row['Option C'] || row['option c'] || row['C'] || row['c'] || '';
+                            const optD = row['Option D'] || row['option d'] || row['D'] || row['d'] || '';
+                            const correct = (row['Correct'] || row['correct'] || row['CORRECT'] || row['Answer'] || row['answer'] || 'A').toString().toUpperCase().trim();
+
+                            if (!optA && !optB) {
+                                // If no options, treat as subjective
+                                qObj.type = 'subjective';
+                            } else {
+                                qObj.type = 'mcq';
+                                qObj.options = {
+                                    A: String(optA),
+                                    B: String(optB),
+                                    C: String(optC),
+                                    D: String(optD)
+                                };
+                                qObj.correct = correct;
+                            }
+                        } else {
+                            qObj.type = 'subjective';
+                        }
+
+                        paper.push(qObj);
+                        addedCount++;
+                    });
+
+                    // Update preview
+                    updatePreview();
+
+                    // Show success status
+                    const status = document.getElementById('questionUploadStatus');
+                    status.style.display = 'block';
+                    status.textContent = `✅ ${addedCount} questions loaded from "${file.name}"`;
+
+                    let msg = `✅ ${addedCount} questions imported successfully!`;
+                    if (errorCount > 0) msg += `\n⚠️ ${errorCount} rows skipped (empty questions).`;
+                    msg += `\nTotal questions in paper: ${paper.length}`;
+                    alert(msg);
+
+                } catch (err) {
+                    alert('❌ Error reading file: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        };
+
+        // ===== NEW: Update Preview after bulk upload =====
+        window.updatePreview = () => {
+            const preview = document.getElementById('preview');
+            preview.innerHTML = '';
+            paper.forEach((q, i) => {
+                preview.innerHTML += `<div class='q-item'>
+                    <span>Q${i + 1}: ${q.text} (${q.type})</span>
+                    <button class="view-btn" onclick="removeQuestion(${i})" style="background:#ef4444;">✕</button>
+                </div>`;
+            });
+
+            // Show/hide clear button
+            document.getElementById('clearQuestionsBtn').style.display = paper.length > 0 ? 'block' : 'none';
+        };
+
+        // ===== NEW: Remove individual question =====
+        window.removeQuestion = (index) => {
+            paper.splice(index, 1);
+            updatePreview();
+        };
+
+        // ===== NEW: Clear all questions =====
+        window.clearAllQuestions = () => {
+            if (!confirm('Are you sure you want to clear ALL questions?')) return;
+            paper = [];
+            updatePreview();
+            document.getElementById('questionUploadStatus').style.display = 'none';
+            // Reset file input
+            document.getElementById('questionFileInput').value = '';
+        };
+
+        // ===== NEW: Download Sample Roll Number Excel =====
+        window.downloadSampleRolls = () => {
+            const wb = XLSX.utils.book_new();
+            const wsData = [
+                ['Roll Number'],
+                ['101'],
+                ['102'],
+                ['103'],
+                ['104'],
+                ['105']
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            ws['!cols'] = [{ wch: 15 }];
+            XLSX.utils.book_append_sheet(wb, ws, 'Roll Numbers');
+            XLSX.writeFile(wb, 'Sample_Roll_Numbers.xlsx');
+        };
+
+        // ===== NEW: Download Sample Questions Excel =====
+        window.downloadSampleQuestions = () => {
+            const wb = XLSX.utils.book_new();
+            const wsData = [
+                ['Question', 'Type', 'Option A', 'Option B', 'Option C', 'Option D', 'Correct'],
+                ['What is 2 + 2?', 'mcq', '3', '4', '5', '6', 'B'],
+                ['Capital of Pakistan?', 'mcq', 'Lahore', 'Karachi', 'Islamabad', 'Peshawar', 'C'],
+                ['Explain the water cycle', 'subjective', '', '', '', '', ''],
+                ['What is photosynthesis?', 'subjective', '', '', '', '', ''],
+                ['Which planet is closest to the Sun?', 'mcq', 'Venus', 'Mercury', 'Earth', 'Mars', 'B']
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            ws['!cols'] = [
+                { wch: 40 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 10 }
+            ];
+            XLSX.utils.book_append_sheet(wb, ws, 'Questions');
+            XLSX.writeFile(wb, 'Sample_Questions.xlsx');
+        };
 
         window.renderLogins = (data) => {
             const list = document.getElementById('loginsList');
@@ -389,7 +696,7 @@
             const filename = `Student_Records_${currentID}_${new Date().toISOString().split('T')[0]}.xlsx`;
 
             const buffer = await workbook.xlsx.writeBuffer();
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const blob = new Blob([buffer], { type: 'application.vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             const url = window.URL.createObjectURL(blob);
             const anchor = document.createElement('a');
             anchor.href = url;
@@ -664,7 +971,7 @@
             }
 
             paper.push(qObj);
-            document.getElementById('preview').innerHTML += `<div class='q-item'>${text} (${type})</div>`;
+            updatePreview();
             document.getElementById('qText').value = "";
 
             if (type === 'mcq') {
@@ -673,8 +980,9 @@
         };
 
         window.publish = () => {
-            const rolls = document.getElementById('rollList').value.split(',').map(r => r.trim());
+            const rolls = document.getElementById('rollList').value.split(',').map(r => r.trim()).filter(r => r);
             if (paper.length === 0) return alert("Kam se kam aik sawal to dalein!");
+            if (rolls.length === 0) return alert("Kam se kam aik roll number to dalein!");
 
             set(ref(db, 'exams/' + currentID), {
                 questions: paper,
